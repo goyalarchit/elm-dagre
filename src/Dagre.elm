@@ -3,6 +3,7 @@ import Graph as G
 import Dict exposing (Dict)
 import List.Extra as LE
 import Dagre.Utils as DU
+import Dagre.Position as DP
 
 {-
 This function assigns rank to all the Nodes of a Acyclic Graph
