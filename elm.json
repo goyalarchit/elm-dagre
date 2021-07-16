@@ -15,6 +15,7 @@
             "elm/html": "1.0.0",
             "elm/random": "1.0.0",
             "elm/svg": "1.0.1",
+            "elm-community/dict-extra": "2.4.0",
             "elm-community/graph": "6.0.0",
             "elm-community/intdict": "3.0.0",
             "elm-community/list-extra": "8.2.4",

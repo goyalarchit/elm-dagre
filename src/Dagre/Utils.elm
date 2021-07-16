@@ -151,7 +151,7 @@ markEdgeWithEdgeType initDummyId e =
         (from,to) = e
     in
     
-    if (from > initDummyId) && (to > initDummyId) then 
+    if (from >= initDummyId) && (to >= initDummyId) then 
         (e,Inner)
     else
         (e,NonInner)
