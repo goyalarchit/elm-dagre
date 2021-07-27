@@ -209,19 +209,181 @@ verticalAlignment rankList conflicts neighbourFn =
         (finalRoot,finalAlign)
 
 
+{-
+The following functions are Helper Functions for Algorithm 3 of Brandes-Kopf
+-}
+
+
+type alias NodePointDict =
+    Dict G.NodeId Int
+
+getPredDictHelper : DU.Layer -> NodeDict -> NodeDict
+getPredDictHelper layer pred = 
+    let
+        predecessors = List.take ((List.length layer)-1) layer
+        nodes = List.drop 1 layer
+        nodesWithPreds = List.map2 Tuple.pair nodes predecessors
+        finalDict = List.foldl (\(n,p) predDict -> Dict.insert n p predDict) pred nodesWithPreds
+     in
+        finalDict
+
+getPredDict : List DU.Layer -> NodeDict
+getPredDict rankList = 
+    let
+        initDict = Dict.empty
+        pred = List.foldl getPredDictHelper initDict rankList
+
+    in
+        pred
+
+updateShiftOrXS : Int -> NodeDict -> G.NodeId -> G.NodeId -> (NodePointDict,NodePointDict) -> (NodePointDict,NodePointDict)
+updateShiftOrXS delta sink u v (shift,xs) =
+    if (Dict.get v sink /= Dict.get u sink ) then
+        let
+            sinkU_ = Dict.get u sink
+            xsV_ = Dict.get v xs
+            xsU_ = Dict.get u xs
+            shiftSinkU_ = case sinkU_ of
+                            Just sinkU ->
+                                Dict.get sinkU shift
+                            Nothing ->
+                                Nothing
+            updateValue = case (shiftSinkU_,xsV_,xsU_) of
+                                (Just ssU, Just xsV, Just xsU) ->
+                                    Just (min ssU (xsV-xsU-delta))
+                                _ ->
+                                    Nothing
+            updatedShift = case sinkU_ of
+                                Just sinkU ->
+                                    Dict.update sinkU (\_-> updateValue) shift
+                                _ ->
+                                    shift 
+        in
+            (updatedShift,xs)
+    else
+        let
+            xsV_ = Dict.get v xs
+            xsU_ = Dict.get u xs
+            updateValue = case (xsV_,xsU_) of
+                                (Just xsV, Just xsU) ->
+                                    Just (max xsV (xsU+delta))
+                                _ ->
+                                    Nothing
+            updatedXS = Dict.update v (\_-> updateValue) xs 
+        in
+            (shift,updatedXS)
+
+    
+    
+
+placePredecessor : G.NodeId -> NodeDict -> (G.NodeId -> G.NodeId -> Int) -> NodeDict -> NodeDict -> G.NodeId -> G.NodeId -> (NodePointDict, NodeDict, NodePointDict) -> (NodePointDict, NodeDict, NodePointDict)
+placePredecessor p pred sepFn root align v w (shift, sink, xs) = 
+    let 
+        rootP = Dict.get p root
+        (pred_shift,pred_sink,pred_xs) = case rootP of
+                                            Nothing -> 
+                                                (shift, sink, xs)
+                                            Just u ->
+                                                placeBlock pred sepFn root align u (shift, sink, xs)
+        updatedSink =  if (Dict.get v pred_sink == Just v) then
+                            Dict.update v (\_ -> Dict.get (getNode p root) pred_sink) pred_sink
+                        else
+                            (pred_sink)
+        delta = sepFn w p
+        (updatedShift,updatedXS) = case rootP of
+                                        Nothing ->
+                                            (pred_shift,pred_xs)
+                                        Just u ->
+                                            updateShiftOrXS delta updatedSink u v (pred_shift,pred_xs)
+    in
+        (updatedShift,updatedSink,updatedXS)
+
+
+
+placeBlockHelper : NodeDict -> (G.NodeId -> G.NodeId -> Int) -> NodeDict -> NodeDict -> G.NodeId -> G.NodeId -> (NodePointDict, NodeDict, NodePointDict) -> (NodePointDict, NodeDict, NodePointDict)
+placeBlockHelper pred sepFn root align v w (shift, sink, xs) = 
+    let
+        (final_shift, final_sink, final_xs) = case Dict.get w pred of
+                                                Nothing ->
+                                                    (shift, sink, xs)
+                                                Just p ->
+                                                    placePredecessor p pred sepFn root align v w (shift, sink, xs)
+        w_new_ = Dict.get w align 
+    in
+        if w_new_ == Just v then
+            (final_shift, final_sink, final_xs)
+        else
+            placeBlockHelper pred sepFn root align v w (final_shift, final_sink, final_xs)
+
 
 {-
 This is the implementation of algorithm 3 of Brandes-Kopf
 This function performs the horizontal compaction and Coordinate assignment.
 -}
 
+horizontalCompaction : List DU.Layer -> List DU.Edge -> NodeDict -> NodeDict -> Dict G.NodeId Int
+horizontalCompaction rankList edges root align = 
+    let
+        sink = DE.fromListBy identity (List.concat rankList)
+        shift = DE.fromListBy (\_ -> DU.infinity) (List.concat rankList)
+        pred = getPredDict rankList
+        xs = Dict.empty
+        sepFn = Debug.todo "Define Sep Function"
+        roots = List.filter (\v -> Just v == Dict.get v root) (List.concat rankList)
+        
+        (updShift,updSink,updXs) = List.foldl (placeBlock pred sepFn root align) (shift, sink, xs) roots 
+        (finXs) = List.foldl (\l xs_ -> List.foldl (assignAbsoluteX root updShift updSink) xs_ l ) updXs rankList  
+    in
+        finXs
 
 
 
+placeBlock: NodeDict -> (G.NodeId -> G.NodeId -> Int) -> NodeDict -> NodeDict -> G.NodeId -> (NodePointDict, NodeDict, NodePointDict) -> (NodePointDict, NodeDict, NodePointDict)
+placeBlock pred sepFn root align v (shift, sink, xs) = 
+    case Dict.get v xs of
+        Nothing ->
+            let
+                xs_v = Dict.insert v 0 xs
+                
+            in
+                placeBlockHelper pred sepFn root align v v (shift, sink, xs_v)
+        Just _ ->
+            (shift, sink, xs)
+
+{-
+assigns the absolute x coordinates
+This line differs from the source paper. See
+http://www.inf.uni-konstanz.de/~brandes/publications/ for details.
+-}
+assignAbsoluteX: NodeDict -> NodePointDict -> NodeDict -> G.NodeId -> NodePointDict -> NodePointDict
+assignAbsoluteX root shift sink v xs =
+    let
+        root_v = getNode v root
+
+        xs_v = case Dict.get root_v xs of
+                    Nothing ->
+                        Dict.insert v 0 xs
+                    Just xsRootV ->
+                        Dict.insert v xsRootV xs
+        shift_sink_root_v = case Dict.get root_v sink of
+                                Nothing ->
+                                    DU.infinity
+                                Just sink_root_v ->
+                                    case Dict.get sink_root_v shift of 
+                                        Nothing ->
+                                            DU.infinity
+                                        Just shiftVal ->
+                                            shiftVal
+        xs_v_shifted = if (v == root_v && shift_sink_root_v < DU.infinity) then
+                            Dict.update v (Maybe.map (\n -> n+shift_sink_root_v)) xs_v
+                        else
+                            xs_v
+    in
+        xs_v_shifted
 
 
-position: (List DU.Layer, List DU.EdgeWithType) -> Dict G.NodeId DU.Coordinates
-position (rankList,edges) =
+positionX: (List DU.Layer, List DU.EdgeWithType) -> Dict G.NodeId DU.Coordinates
+positionX (rankList,edges) =
     Dict.empty
 
 {-

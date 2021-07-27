@@ -11,6 +11,10 @@ intMax : Int
 intMax = 
     2^31 - 1
 
+infinity : Int
+infinity = 
+    2^31 - 1
+
 type alias Coordinates = 
     (Float,Float)
 
