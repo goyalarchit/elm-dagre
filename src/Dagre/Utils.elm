@@ -46,10 +46,15 @@ getEdges g =
         List.map (\e -> (e.from,e.to) ) edges
 
 
-alongOutgoingEdges : G.NodeId -> List Edge -> List G.NodeId
-alongOutgoingEdges nodeId edges =
+alongOutgoingEdges : List Edge -> G.NodeId -> List G.NodeId
+alongOutgoingEdges edges nodeId =
     List.filter (\e -> Tuple.first e == nodeId ) edges
     |> List.map (\e -> Tuple.second e)
+
+alongIncomingEdges : List Edge -> G.NodeId -> List G.NodeId
+alongIncomingEdges edges nodeId =
+    List.filter (\e -> Tuple.second e == nodeId ) edges
+    |> List.map (\e -> Tuple.first e)
 
 getInEdges : G.NodeId -> List EdgeWithType -> List EdgeWithType
 getInEdges nodeId edges =
@@ -134,8 +139,8 @@ getAdjacentLayerPairs rankList =
         List.map2 (\l1 l2 -> (l1,l2)) fromLayers toLayers
 
 
-checkDummyNode: G.NodeId -> G.NodeId -> Bool
-checkDummyNode initDummyId nodeId =
+isDummyNode: G.NodeId -> G.NodeId -> Bool
+isDummyNode initDummyId nodeId =
     if nodeId < initDummyId then
         False
     else

@@ -267,9 +267,10 @@ runLayout graph =
                 rankList = assignRanks g
                 ((newRankList,newEdges),controlPoints) = addDummyNodesAndSplitEdges (rankList,edges)
                 bestRankList = vertexOrder (newRankList,newEdges)
+                finalDict = DP.position graph (bestRankList,newEdges)
 
             in
-                (Dict.empty,controlPoints)
+                (finalDict,controlPoints)
         _ ->
             (Dict.empty,Dict.empty)
 
@@ -284,7 +285,7 @@ acg =
     , ( 1, 2 )
     , ( 1, 3 )
     , ( 1, 4 )
-    , ( 5, 4 )
+    , ( 5, 8 )
     , ( 2, 6 )
     , ( 2, 7 )
     , ( 3, 6 )

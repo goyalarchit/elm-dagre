@@ -6,6 +6,19 @@ import List.Extra as LE
 import Graph as G
 import Dagre.Utils as DU
 
+{-
+Naming Convention
+If we get a value from dictionary "dict" for key "v",
+and store it in a variable, then the name of variable should be
+dict_v == dict[v]
+the variable holding the maybe value is named
+"dict_v_" 
+
+If we update the key "v" in a dictionary "dict", 
+then the new updated dictionary is stored in 
+"dictV" 
+
+-}
 
 checkType1Conflict : (Int,Int) -> Int -> Bool
 checkType1Conflict (k0,k1) k =
@@ -240,33 +253,33 @@ updateShiftOrXS : Int -> NodeDict -> G.NodeId -> G.NodeId -> (NodePointDict,Node
 updateShiftOrXS delta sink u v (shift,xs) =
     if (Dict.get v sink /= Dict.get u sink ) then
         let
-            sinkU_ = Dict.get u sink
-            xsV_ = Dict.get v xs
-            xsU_ = Dict.get u xs
-            shiftSinkU_ = case sinkU_ of
-                            Just sinkU ->
-                                Dict.get sinkU shift
+            sink_u_ = Dict.get u sink
+            xs_v_ = Dict.get v xs
+            xs_u_ = Dict.get u xs
+            shift_sink_u_ = case sink_u_ of
+                            Just sink_u ->
+                                Dict.get sink_u shift
                             Nothing ->
                                 Nothing
-            updateValue = case (shiftSinkU_,xsV_,xsU_) of
-                                (Just ssU, Just xsV, Just xsU) ->
-                                    Just (min ssU (xsV-xsU-delta))
+            updateValue = case (shift_sink_u_,xs_v_,xs_u_) of
+                                (Just ss_u, Just xs_v, Just xs_u) ->
+                                    Just (min ss_u (xs_v-xs_u-delta))
                                 _ ->
                                     Nothing
-            updatedShift = case sinkU_ of
-                                Just sinkU ->
-                                    Dict.update sinkU (\_-> updateValue) shift
+            updatedShift = case sink_u_ of
+                                Just sink_u ->
+                                    Dict.update sink_u (\_-> updateValue) shift
                                 _ ->
                                     shift 
         in
             (updatedShift,xs)
     else
         let
-            xsV_ = Dict.get v xs
-            xsU_ = Dict.get u xs
-            updateValue = case (xsV_,xsU_) of
-                                (Just xsV, Just xsU) ->
-                                    Just (max xsV (xsU+delta))
+            xs_v_ = Dict.get v xs
+            xs_u_ = Dict.get u xs
+            updateValue = case (xs_v_,xs_u_) of
+                                (Just xs_v, Just xs_u) ->
+                                    Just (max xs_v (xs_u+delta))
                                 _ ->
                                     Nothing
             updatedXS = Dict.update v (\_-> updateValue) xs 
@@ -279,8 +292,8 @@ updateShiftOrXS delta sink u v (shift,xs) =
 placePredecessor : G.NodeId -> NodeDict -> (G.NodeId -> G.NodeId -> Int) -> NodeDict -> NodeDict -> G.NodeId -> G.NodeId -> (NodePointDict, NodeDict, NodePointDict) -> (NodePointDict, NodeDict, NodePointDict)
 placePredecessor p pred sepFn root align v w (shift, sink, xs) = 
     let 
-        rootP = Dict.get p root
-        (pred_shift,pred_sink,pred_xs) = case rootP of
+        root_p_ = Dict.get p root
+        (pred_shift,pred_sink,pred_xs) = case root_p_ of
                                             Nothing -> 
                                                 (shift, sink, xs)
                                             Just u ->
@@ -290,7 +303,7 @@ placePredecessor p pred sepFn root align v w (shift, sink, xs) =
                         else
                             (pred_sink)
         delta = sepFn w p
-        (updatedShift,updatedXS) = case rootP of
+        (updatedShift,updatedXS) = case root_p_ of
                                         Nothing ->
                                             (pred_shift,pred_xs)
                                         Just u ->
@@ -313,7 +326,11 @@ placeBlockHelper pred sepFn root align v w (shift, sink, xs) =
         if w_new_ == Just v then
             (final_shift, final_sink, final_xs)
         else
-            placeBlockHelper pred sepFn root align v w (final_shift, final_sink, final_xs)
+            case w_new_ of
+                Nothing ->
+                    (final_shift, final_sink, final_xs)
+                Just w_new ->
+                    placeBlockHelper pred sepFn root align v w_new (final_shift, final_sink, final_xs)
 
 
 {-
@@ -321,14 +338,13 @@ This is the implementation of algorithm 3 of Brandes-Kopf
 This function performs the horizontal compaction and Coordinate assignment.
 -}
 
-horizontalCompaction : List DU.Layer -> List DU.Edge -> NodeDict -> NodeDict -> Dict G.NodeId Int
-horizontalCompaction rankList edges root align = 
+horizontalCompaction : List DU.Layer -> (G.NodeId -> G.NodeId -> Int) -> NodeDict -> NodeDict -> Dict G.NodeId Int
+horizontalCompaction rankList sepFn root align = 
     let
         sink = DE.fromListBy identity (List.concat rankList)
         shift = DE.fromListBy (\_ -> DU.infinity) (List.concat rankList)
         pred = getPredDict rankList
         xs = Dict.empty
-        sepFn = Debug.todo "Define Sep Function"
         roots = List.filter (\v -> Just v == Dict.get v root) (List.concat rankList)
         
         (updShift,updSink,updXs) = List.foldl (placeBlock pred sepFn root align) (shift, sink, xs) roots 
@@ -343,10 +359,10 @@ placeBlock pred sepFn root align v (shift, sink, xs) =
     case Dict.get v xs of
         Nothing ->
             let
-                xs_v = Dict.insert v 0 xs
+                xsV = Dict.insert v 0 xs
                 
             in
-                placeBlockHelper pred sepFn root align v v (shift, sink, xs_v)
+                placeBlockHelper pred sepFn root align v v (shift, sink, xsV)
         Just _ ->
             (shift, sink, xs)
 
@@ -382,9 +398,35 @@ assignAbsoluteX root shift sink v xs =
         xs_v_shifted
 
 
-positionX: (List DU.Layer, List DU.EdgeWithType) -> Dict G.NodeId DU.Coordinates
-positionX (rankList,edges) =
-    Dict.empty
+positionX: G.Graph n e -> (List DU.Layer, List DU.Edge) -> NodePointDict
+positionX g (rankList,edges) =
+    let
+        edgesWithType = DU.markEdgesWithEdgeType g edges
+        (type1Conflicts,_) = preprocessing (rankList,edgesWithType)
+        conflicts = type1Conflicts
+        (root,align) = verticalAlignment rankList conflicts (DU.alongIncomingEdges edges) 
+        xs = horizontalCompaction rankList (sep 50 10 g) root align
+
+    in
+        xs
+
+
+
+
+sep: Int -> Int -> G.Graph n e -> G.NodeId -> G.NodeId -> Int
+sep nodeSep edgeSep g v u =
+    let
+        initDummyId = case G.nodeIdRange g of
+                        Nothing ->
+                            0
+                        Just (_, maxNodeId) ->
+                            maxNodeId+1
+        nodeWidth = 0
+        getSep = \nId -> if (DU.isDummyNode initDummyId nId) then edgeSep else nodeSep
+    in
+        (getSep u) + (getSep v) // 2 + nodeWidth
+
+
 
 {-
 map all the nodes in adjacent layer to their order, and the edges to orders too
@@ -393,3 +435,44 @@ map all the nodes in adjacent layer to their order, and the edges to orders too
 after marking one layer's conflicting edges remap them to vertices
 
 -}
+
+
+positionY: List DU.Layer -> Int -> NodePointDict
+positionY rankList rankSep =
+    let
+        ys = Dict.empty
+        (_, ys_assigned) = List.foldl (assignAbsoluteY rankSep 0) (0,ys) rankList
+    in
+        ys_assigned
+
+assignAbsoluteY : Int -> Int -> DU.Layer -> (Int,NodePointDict) -> (Int,NodePointDict)
+assignAbsoluteY rankSep maxHeight l (currentY,ys) =
+    let
+        ys_updated = List.foldl (\n ys_ -> Dict.insert n (currentY + maxHeight //2 ) ys_) ys l
+        newY = currentY + maxHeight + rankSep
+    in
+        (newY, ys_updated)
+
+
+{- 
+Helper to combine X and Y coordinated
+-}
+combinePoints : NodePointDict -> NodePointDict -> Dict G.NodeId DU.Coordinates
+combinePoints xs ys =
+    let
+        onlyX = (\n x finalDict -> Dict.insert n (toFloat x, toFloat 0) finalDict)
+        bothXY = (\n x y finalDict -> Dict.insert n (toFloat x,toFloat y) finalDict)
+        onlyY = (\n y finalDict -> Dict.insert n (toFloat 0,toFloat y) finalDict )
+    in
+        Dict.merge onlyX bothXY onlyY xs ys (Dict.empty)
+
+
+
+position: G.Graph n e -> (List DU.Layer, List DU.Edge) -> Dict G.NodeId DU.Coordinates
+position g (rankList,edges) =
+    let
+        ys = positionY rankList 50
+        xs = positionX g (rankList,edges)
+
+    in
+        combinePoints xs ys
