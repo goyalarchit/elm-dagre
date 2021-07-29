@@ -2,3 +2,5 @@
 elm-stuff
 # elm-repl generated files
 repl-temp-*
+# Lines of Code Count
+.VSCodeCounter

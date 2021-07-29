@@ -1,4 +1,4 @@
-module Dagre exposing (..)
+module Dagre exposing (runLayout)
 import Graph as G 
 import Dict exposing (Dict)
 import List.Extra as LE
@@ -150,7 +150,7 @@ mapAndSortEdges (l1,l2) edges =
     let
         mappedEdges = List.map (DU.mapEdgeToOrder (l1,l2)) edges
         sortedEdges = List.sortWith lexSortEdge mappedEdges
-        southernPoints = List.map (\(from,to) -> to) sortedEdges
+        southernPoints = List.map (\(_,to) -> to) sortedEdges
     in
         southernPoints
 
@@ -212,7 +212,7 @@ biLayerCrossCount edges (l1,l2) =
 crossCount : (List DU.Layer,List DU.Edge) -> Int
 crossCount (rankList,edges) =
     let
-        fromLayers = List.take ((List.length rankList)-1) rankList
+        fromLayers = List.take ((List.length rankList) - 1) rankList
         toLayers = List.drop 1 rankList
         adjacentLayers = List.map2 (\l1 l2 -> (l1,l2)) fromLayers toLayers
         cc = List.map (biLayerCrossCount edges) adjacentLayers |> List.foldl (+) 0
