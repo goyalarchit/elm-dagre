@@ -2,9 +2,16 @@ module Test exposing (..)
 
 -- import Html.Attributes exposing()
 
-import Dagre as D
 import Graph as G
 import Render as R
+
+
+
+{-
+   The following tree verifies that Dagre.Order.Transpose works
+   But also gives idea that graph can draw it with no crossing,
+   while elm-dagre draws it with 1 crossing edge.
+-}
 
 
 tree : G.Graph Int ()
@@ -21,6 +28,7 @@ tree =
         , ( 3, 8 )
         , ( 0, 7 )
         , ( 0, 5 )
+        , ( 0, 6 )
 
         -- , ( 4, 8 )
         -- , ( 6, 8 )
@@ -29,4 +37,4 @@ tree =
 
 
 main =
-    R.draw R.svgDrawNode R.svgDrawEdge D.acg
+    R.draw R.svgDrawNode R.svgDrawEdge tree

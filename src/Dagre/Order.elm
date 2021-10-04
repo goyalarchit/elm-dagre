@@ -3,12 +3,8 @@ module Dagre.Order exposing (..)
 import Dagre.Order.Barycenter as DOB
 import Dagre.Order.CrossCount as DOC
 import Dagre.Order.Init as DOI
+import Dagre.Order.Transpose as DOT
 import Dagre.Utils as DU
-import Debug
-import Dict exposing (Dict)
-import Dict.Extra as DE
-import Graph as G
-import List.Extra as LE
 
 
 
@@ -48,12 +44,14 @@ optimizeOrdering ( layering, edges ) bestCC ( iter, lastBest ) =
             newLayering =
                 sweepLayers ( layering, edges ) iter
 
-            -- TODO: Add transpose function for adjacent node swapping heuristic
+            newTransposedLayering =
+                DOT.transpose edges newLayering
+
             newCC =
-                DOC.crossCount ( newLayering, edges )
+                DOC.crossCount ( newTransposedLayering, edges )
         in
         if newCC < bestCC then
-            optimizeOrdering ( newLayering, edges ) newCC ( iter + 1, 0 )
+            optimizeOrdering ( newTransposedLayering, edges ) newCC ( iter + 1, 0 )
 
         else
             optimizeOrdering ( layering, edges ) bestCC ( iter + 1, lastBest + 1 )
