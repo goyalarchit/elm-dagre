@@ -154,10 +154,6 @@ preprocessing ( rankList, edges ) =
 -}
 
 
-type alias NeighbourFn =
-    G.NodeId -> List G.NodeId
-
-
 type alias NodeDict =
     Dict G.NodeId G.NodeId
 
@@ -223,7 +219,7 @@ alignVertexHelper conflicts v ( w, pos_w ) ( ( root, align ), prevIdx ) =
         ( ( root, align ), prevIdx )
 
 
-alignVertex : Dict G.NodeId Int -> List DU.Edge -> NeighbourFn -> G.NodeId -> ( ( NodeDict, NodeDict ), Int ) -> ( ( NodeDict, NodeDict ), Int )
+alignVertex : Dict G.NodeId Int -> List DU.Edge -> DU.NeighbourFn -> G.NodeId -> ( ( NodeDict, NodeDict ), Int ) -> ( ( NodeDict, NodeDict ), Int )
 alignVertex pos conflicts neighbourFn v ( ( root, align ), prevIdx ) =
     let
         ws =
@@ -252,7 +248,7 @@ alignVertex pos conflicts neighbourFn v ( ( root, align ), prevIdx ) =
     updatedValues
 
 
-verticalAlignmentVisitLayer : Dict G.NodeId Int -> List DU.Edge -> NeighbourFn -> DU.Layer -> ( NodeDict, NodeDict ) -> ( NodeDict, NodeDict )
+verticalAlignmentVisitLayer : Dict G.NodeId Int -> List DU.Edge -> DU.NeighbourFn -> DU.Layer -> ( NodeDict, NodeDict ) -> ( NodeDict, NodeDict )
 verticalAlignmentVisitLayer pos conflicts neighbourFn layer ( root, align ) =
     let
         ( ( finalRoot, finalAlign ), _ ) =
@@ -270,7 +266,7 @@ verticalAlignmentVisitLayer pos conflicts neighbourFn layer ( root, align ) =
 -}
 
 
-verticalAlignment : List DU.Layer -> List DU.Edge -> NeighbourFn -> ( NodeDict, NodeDict )
+verticalAlignment : List DU.Layer -> List DU.Edge -> DU.NeighbourFn -> ( NodeDict, NodeDict )
 verticalAlignment rankList conflicts neighbourFn =
     let
         root =

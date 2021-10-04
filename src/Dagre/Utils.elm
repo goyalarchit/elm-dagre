@@ -40,6 +40,10 @@ type alias EdgeWithType =
     ( Edge, EdgeType )
 
 
+type alias NeighbourFn =
+    G.NodeId -> List G.NodeId
+
+
 getEdges : G.Graph n e -> List Edge
 getEdges g =
     let
@@ -66,8 +70,8 @@ getInEdges nodeId edges =
     List.filter (\e -> (Tuple.first e |> Tuple.second) == nodeId) edges
 
 
-rank : G.NodeId -> List Layer -> Int
-rank nodeId layers =
+getRank : G.NodeId -> List Layer -> Int
+getRank nodeId layers =
     case LE.findIndex (List.member nodeId) layers of
         Just x ->
             x
@@ -155,6 +159,15 @@ getAdjacentLayerPairs rankList =
             List.drop 1 rankList
     in
     List.map2 (\l1 l2 -> ( l1, l2 )) fromLayers toLayers
+
+
+getLayer : Int -> List Layer -> Layer
+getLayer rank layering =
+    let
+        layer =
+            LE.getAt rank layering
+    in
+    Maybe.withDefault [] layer
 
 
 isDummyNode : G.NodeId -> G.NodeId -> Bool
