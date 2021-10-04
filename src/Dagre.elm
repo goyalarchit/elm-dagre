@@ -112,22 +112,16 @@ checkAndSplitMultiSpanEdge ( from, to ) ( ( rankLayers, dummyId ), ( edges, cont
 
 
 {-
-   [5,0],[1] [(0,1), (5,4)]
-
-   [1,9],[(5,9),(9,4)],(5,4) = [9]
-
-
--}
--- addDummyNodesAndSplitEdgesBetween : (DU.Layer,DU.Layer) -> List DU.Edge -> ((DU.Layer,List DU.Edge),Dict DU.Edge (List G.NodeId))
--- addDummyNodesAndSplitEdgesBetween (l1,l2) edges =
---     let
---         initDummyId =
---     in
-{-
    This function adds dummy nodes and splits the edges
    The edges which span over multiple layers are split.
    The split points are called Control points for the edge
    and are added as dummy nodes
+    -- example
+    -- input : (Layering, edges)
+    -- ([[4,0],[1],[2]], [(0,1), (1,2), (4,2)])
+    -- output
+    -- (([[4,0],[1,5],[2]], [(0,1), (1,2), (4,5), (5,2)]), (4,2) = [5])
+
 -}
 
 
@@ -145,7 +139,7 @@ addDummyNodesAndSplitEdges ( rankLayers, edges ) =
         initControlPoints =
             Dict.fromList <| List.map (\e -> ( e, [] )) edges
 
-        ( ( newRankLayers, newDummyId ), ( newEdges, newControlPoints ) ) =
+        ( ( newRankLayers, _ ), ( newEdges, newControlPoints ) ) =
             List.foldl
                 checkAndSplitMultiSpanEdge
                 ( ( rankLayers, initDummyId ), ( edges, initControlPoints ) )
@@ -155,12 +149,6 @@ addDummyNodesAndSplitEdges ( rankLayers, edges ) =
 
 
 
-{-
-   Position
-
-
-
--}
 {-
    main function that returns the Dagre Layout
    Positions and Control Points for splines
