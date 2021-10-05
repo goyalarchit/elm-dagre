@@ -63,7 +63,7 @@ optimizeLayer edges rank ( layering, improved ) =
             DU.getLayer (rank + 1) layering
 
         positions =
-            List.range 0 (List.length curLayer - 1)
+            List.range 0 (List.length curLayer - 2)
 
         ( newCurLayer, newImproved ) =
             List.foldl (optimizeNodePosition edges ( prevLayer, nextLayer )) ( curLayer, improved ) positions
