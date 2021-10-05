@@ -1,5 +1,6 @@
 module Dagre exposing (acg, runLayout)
 
+import Dagre.Acyclic as DA
 import Dagre.Normalize as DN
 import Dagre.Order as DO
 import Dagre.Position as DP
@@ -22,7 +23,7 @@ import Graph as G
    Positions and Control Points for splines.
    This package implements Sugiyama style graph drawing.
    The Sugiyama framework has the following phases in order of execution
-   1. TODO : Making Graph Acyclic (Removing cycles)
+   1. Making Graph Acyclic (Removing cycles)
    2. Rank/Layer Assignment
    3. Normalizing (Removing Long Edges)
    4. Vertex Ordering (Reducing Number of Edge Crossing)
@@ -32,28 +33,29 @@ import Graph as G
 
 runLayout : G.Graph n e -> ( Dict G.NodeId DU.Coordinates, Dict DU.Edge (List G.NodeId) )
 runLayout graph =
-    case G.checkAcyclic graph of
-        Ok g ->
-            let
-                edges =
-                    DU.getEdges graph
+    let
+        ( newGraph, newAcyclicGraph, reversedEdges ) =
+            DA.run graph
 
-                rankList =
-                    DR.assignRanks g
+        edges =
+            DU.getEdges newGraph
 
-                ( ( newRankList, newEdges ), controlPoints ) =
-                    DN.addDummyNodesAndSplitEdges ( rankList, edges )
+        rankList =
+            DR.assignRanks newAcyclicGraph
 
-                bestRankList =
-                    DO.vertexOrder ( newRankList, newEdges )
+        ( ( newRankList, newEdges ), controlPoints ) =
+            DN.addDummyNodesAndSplitEdges ( rankList, edges )
 
-                finalDict =
-                    DP.position graph ( bestRankList, newEdges )
-            in
-            ( finalDict, controlPoints )
+        bestRankList =
+            DO.vertexOrder ( newRankList, newEdges )
 
-        _ ->
-            ( Dict.empty, Dict.empty )
+        finalDict =
+            DP.position newGraph ( bestRankList, newEdges )
+
+        finalControlPoints =
+            DA.undo (DU.getEdges graph) reversedEdges controlPoints
+    in
+    ( finalDict, finalControlPoints )
 
 
 acg : G.Graph Int ()
