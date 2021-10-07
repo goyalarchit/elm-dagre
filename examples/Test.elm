@@ -4,6 +4,7 @@ module Test exposing (..)
 
 import Graph as G
 import Render as R
+import Svg exposing (Svg)
 
 
 
@@ -30,6 +31,7 @@ tree =
         , ( 0, 5 )
         , ( 0, 6 )
         , ( 4, 0 )
+        , ( 4, 4 )
 
         -- , ( 6, 0 )
         -- , ( 7, 0 )
@@ -39,5 +41,6 @@ tree =
         ]
 
 
+main : Svg msg
 main =
     R.draw R.svgDrawNode R.svgDrawEdge tree

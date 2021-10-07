@@ -1,4 +1,4 @@
-module Dagre.Acyclic exposing (..)
+module Dagre.Acyclic exposing (run, undo)
 
 import Dagre.Utils as DU
 import Dict exposing (Dict)
@@ -28,7 +28,7 @@ makeAcyclic ( graph, reversedEdges ) =
         Err e ->
             let
                 newGraph =
-                    reverseEdge e graph
+                    updateEdge e graph
 
                 errorEdge =
                     ( e.to, e.from )
@@ -36,8 +36,8 @@ makeAcyclic ( graph, reversedEdges ) =
             makeAcyclic ( newGraph, errorEdge :: reversedEdges )
 
 
-reverseEdge : G.Edge e -> G.Graph n e -> G.Graph n e
-reverseEdge e graph =
+updateEdge : G.Edge e -> G.Graph n e -> G.Graph n e
+updateEdge e graph =
     let
         reverse =
             \nodeCtx ->
@@ -45,8 +45,21 @@ reverseEdge e graph =
                     | incoming = IntDict.insert e.to e.label nodeCtx.incoming
                     , outgoing = IntDict.remove e.to nodeCtx.outgoing
                 }
+
+        remove =
+            \nodeCtx ->
+                { nodeCtx
+                    | incoming = IntDict.remove e.from nodeCtx.incoming
+                    , outgoing = IntDict.remove e.to nodeCtx.outgoing
+                }
     in
-    G.update e.from (Maybe.map reverse) graph
+    if e.from == e.to then
+        -- Remove Self loop
+        G.update e.from (Maybe.map remove) graph
+
+    else
+        -- Reverse Cyclic Edge
+        G.update e.from (Maybe.map reverse) graph
 
 
 
@@ -69,12 +82,12 @@ undoHelper originalEdges e controlPoints =
         controlPoints_e =
             Maybe.withDefault [] (Dict.get e controlPoints)
     in
-    -- if the current reversed edge is a part of original graph (bidirectional edge)
-    -- then dont remove reversed edge, just add a new entry
     if List.member ( from, to ) originalEdges then
+        -- if the current reversed edge is a part of original graph (bidirectional edge)
+        -- then dont remove reversed edge, just add a new entry
         Dict.insert ( to, from ) (List.reverse controlPoints_e) controlPoints
-        -- else remove the reversed edge, and add a new edge (original edge) with control Points reversed.
 
     else
+        -- else remove the reversed edge, and add a new edge (original edge) with control Points reversed.
         Dict.remove ( from, to ) controlPoints
             |> Dict.insert ( to, from ) (List.reverse controlPoints_e)

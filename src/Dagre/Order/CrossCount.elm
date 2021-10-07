@@ -1,4 +1,4 @@
-module Dagre.Order.CrossCount exposing (..)
+module Dagre.Order.CrossCount exposing (crossCount)
 
 import Dagre.Utils as DU
 import List.Extra as LE

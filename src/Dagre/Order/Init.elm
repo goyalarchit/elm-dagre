@@ -1,4 +1,4 @@
-module Dagre.Order.Init exposing (..)
+module Dagre.Order.Init exposing (initOrder)
 
 import Dagre.Utils as DU
 import List

@@ -1,4 +1,4 @@
-module Dagre.Normalize exposing (..)
+module Dagre.Normalize exposing (addDummyNodesAndSplitEdges)
 
 import Dagre.Utils as DU
 import Dict exposing (Dict)

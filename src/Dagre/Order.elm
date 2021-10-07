@@ -1,4 +1,4 @@
-module Dagre.Order exposing (..)
+module Dagre.Order exposing (vertexOrder)
 
 import Dagre.Order.Barycenter as DOB
 import Dagre.Order.CrossCount as DOC
@@ -77,4 +77,5 @@ sweepLayers ( layering, edges ) iter =
         List.foldl (DOB.barycenter edges DOB.PreviousLayer) layering (List.range 1 maxRank)
 
     else
+        -- Applies BarryCenter Heuristic from 2nd last layer to 0th layer
         List.foldl (DOB.barycenter edges DOB.NextLayer) layering (List.range 0 (maxRank - 1) |> List.reverse)

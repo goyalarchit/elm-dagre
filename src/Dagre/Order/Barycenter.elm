@@ -1,4 +1,4 @@
-module Dagre.Order.Barycenter exposing (..)
+module Dagre.Order.Barycenter exposing (FixedLayer(..), barycenter)
 
 import Dagre.Utils as DU
 import Graph as G
