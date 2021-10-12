@@ -14,7 +14,7 @@ intMax =
     2 ^ 31 - 1
 
 
-infinity : Int
+infinity : Float
 infinity =
     2 ^ 31 - 1
 
