@@ -24,6 +24,16 @@ type alias NodeDict =
     Dict G.NodeId G.NodeId
 
 
+type VertDir
+    = Up
+    | Down
+
+
+type HorizDir
+    = Left
+    | Right
+
+
 
 {-
    This function is exposed to other modules and runs the Brandes Kopf, Algorithm
@@ -43,11 +53,11 @@ positionX g ( rankList, edges ) =
         conflicts =
             type1Conflicts
 
-        ( root, align ) =
-            verticalAlignment rankList conflicts (DU.alongIncomingEdges edges)
+        vhDir =
+            List.map (\v -> List.map (\h -> ( v, h )) [ Left, Right ]) [ Up, Down ]
 
         xs =
-            horizontalCompaction rankList (sep 50 10 g) root align
+            positionXHelper g ( rankList, edges ) conflicts ( Down, Right )
     in
     xs
 
@@ -69,6 +79,47 @@ preprocessing ( rankList, edges ) =
             findType1Conflicts ( rankList, edges )
     in
     ( allType1Conflicts, [] )
+
+
+
+{-
+   This function finds the horizontal coordinates for a given Vertical
+   and Horizontal direction
+
+-}
+
+
+positionXHelper : G.Graph n e -> ( List DU.Layer, List DU.Edge ) -> List DU.Edge -> ( VertDir, HorizDir ) -> NodePointDict
+positionXHelper g ( rankList, edges ) conflicts ( vDir, hDir ) =
+    let
+        ( intAdjustedRankList, neighbourFn ) =
+            case vDir of
+                Up ->
+                    ( rankList, DU.alongIncomingEdges edges )
+
+                Down ->
+                    ( List.reverse rankList, DU.alongOutgoingEdges edges )
+
+        finalAdjustedRankList =
+            case hDir of
+                Left ->
+                    intAdjustedRankList
+
+                Right ->
+                    List.map List.reverse intAdjustedRankList
+
+        ( root, align ) =
+            verticalAlignment finalAdjustedRankList conflicts neighbourFn
+
+        xs =
+            horizontalCompaction finalAdjustedRankList (sep 50 10 g) root align
+    in
+    case hDir of
+        Left ->
+            xs
+
+        Right ->
+            Dict.map (\_ c -> -c) xs
 
 
 
@@ -485,12 +536,7 @@ updateShiftOrXS delta sink u v ( shift, xs ) =
                 Dict.get u xs
 
             shift_sink_u_ =
-                case sink_u_ of
-                    Just sink_u ->
-                        Dict.get sink_u shift
-
-                    Nothing ->
-                        Nothing
+                Maybe.andThen (\sink_u -> Dict.get sink_u shift) sink_u_
 
             updateValue =
                 case ( shift_sink_u_, xs_v_, xs_u_ ) of
