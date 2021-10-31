@@ -34,9 +34,13 @@ type HorizDir
     | Right
 
 
+nodeWidth =
+    0
+
+
 
 {-
-   This function is exposed to other modules and runs the Brandes Kopf, Algorithm
+   This function is exposed to other modules and runs the Brandes Kopf, Algorithm 4
    TODO: Need to add balance subroutine
 -}
 
@@ -55,11 +59,21 @@ positionX g ( rankList, edges ) =
 
         vhDir =
             List.map (\v -> List.map (\h -> ( v, h )) [ Left, Right ]) [ Up, Down ]
+                |> List.concat
 
-        xs =
-            positionXHelper g ( rankList, edges ) conflicts ( Down, Right )
+        xss =
+            List.map (\d -> ( d, positionXHelper g ( rankList, edges ) conflicts d )) vhDir
+
+        smallestWidthAlign =
+            findSmallestWidthAlignment (List.map Tuple.second xss) nodeWidth
+
+        alignedXss =
+            alignCoordinates xss smallestWidthAlign
+
+        -- xs =
+        --     positionXHelper g ( rankList, edges ) conflicts ( Down, Right )
     in
-    xs
+    balance alignedXss
 
 
 
@@ -253,9 +267,6 @@ sep nodeSep edgeSep g v u =
                 Just ( _, maxNodeId ) ->
                     maxNodeId + 1
 
-        nodeWidth =
-            0
-
         getSep =
             \nId ->
                 if DU.isDummyNode initDummyId nId then
@@ -269,7 +280,127 @@ sep nodeSep edgeSep g v u =
 
 
 {-
-   Following are helper functions for Preprocessing Step
+   Returns the alignment with the smallest width
+-}
+
+
+findSmallestWidthAlignment : List NodePointDict -> Float -> NodePointDict
+findSmallestWidthAlignment xss w =
+    let
+        minW =
+            \xs -> Dict.map (\k v -> v - (w / 2)) xs |> Dict.values |> List.minimum |> Maybe.withDefault 0
+
+        maxW =
+            \xs -> Dict.map (\k v -> v + (w / 2)) xs |> Dict.values |> List.maximum |> Maybe.withDefault 0
+
+        xss_ =
+            List.map (\xs -> ( xs, maxW xs - minW xs )) xss
+
+        defXs_ =
+            Maybe.withDefault ( Dict.empty, 0 ) (LE.getAt 0 xss_)
+    in
+    LE.minimumBy Tuple.second xss_
+        |> Maybe.withDefault defXs_
+        |> Tuple.first
+
+
+
+{-
+   Align the coordinates of each of the layout alignments such that
+   left-biased alignments have their minimum coordinate at the same point as
+   the minimum coordinate of the smallest width alignment and right-biased
+   alignments have their maximum coordinate at the same point as the maximum
+   coordinate of the smallest width alignment.
+-}
+
+
+alignCoordinates : List ( ( VertDir, HorizDir ), NodePointDict ) -> NodePointDict -> List NodePointDict
+alignCoordinates xss alignTo =
+    let
+        minX =
+            \xs -> Dict.values xs |> List.minimum |> Maybe.withDefault 0
+
+        maxX =
+            \xs -> Dict.values xs |> List.maximum |> Maybe.withDefault 0
+
+        alignToMin =
+            minX alignTo
+
+        alignToMax =
+            maxX alignTo
+
+        delta =
+            \hDir xs ->
+                case hDir of
+                    Left ->
+                        alignToMin - minX xs
+
+                    Right ->
+                        alignToMax - maxX xs
+
+        deltas =
+            List.map (\( ( _, hDir ), xs ) -> delta hDir xs) xss
+
+        xss_ =
+            List.map2 (\( ( _, _ ), xs ) del -> Dict.map (\_ x -> x + del) xs) xss deltas
+    in
+    xss_
+
+
+
+{-
+   Balances the layout by taking the Average Median of coordinates based on
+   different biases.
+-}
+
+
+balance : List NodePointDict -> NodePointDict
+balance xss =
+    let
+        helper =
+            \n x xsC ->
+                if Dict.member n xsC then
+                    Dict.update n (Maybe.map (\xCoords -> x :: xCoords)) xsC
+
+                else
+                    Dict.insert n [ x ] xsC
+
+        appendXs =
+            \xs xsC -> Dict.foldl helper xsC xs
+
+        multiXs =
+            List.foldl appendXs Dict.empty xss
+
+        sortedMultiXs =
+            Dict.map (\_ x -> List.sort x) multiXs
+
+        finalX =
+            \l ->
+                case l of
+                    [ _, x1, x2, _ ] ->
+                        (x1 + x2) / 2
+
+                    [ _, x, _ ] ->
+                        x
+
+                    [ x0, x1 ] ->
+                        (x0 + x1) / 2
+
+                    [ x ] ->
+                        x
+
+                    [] ->
+                        0
+
+                    x :: _ ->
+                        x
+    in
+    Dict.map (\_ xList -> finalX xList) sortedMultiXs
+
+
+
+{-
+   Following are helper functions for Preprocessing Step (Algorithm 1 from BK)
 
 -}
 
@@ -637,3 +768,9 @@ placeBlockHelper pred sepFn root align v w ( shift, sink, xs ) =
 
             Just w_new ->
                 placeBlockHelper pred sepFn root align v w_new ( final_shift, final_sink, final_xs )
+
+
+getWidth : Dict G.NodeId Float -> Float -> G.NodeId -> Float
+getWidth widthDict defaultWidth nodeId =
+    Dict.get nodeId widthDict
+        |> Maybe.withDefault defaultWidth
