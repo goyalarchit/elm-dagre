@@ -6,6 +6,13 @@ import Dict exposing (Dict)
 import Graph as G
 
 
+type RankDir
+    = TB
+    | BT
+    | LR
+    | RL
+
+
 
 {-
    Naming Convention
@@ -83,10 +90,36 @@ combinePoints xs ys =
 position : G.Graph n e -> ( List DU.Layer, List DU.Edge ) -> Dict G.NodeId DU.Coordinates
 position g ( rankList, edges ) =
     let
+        -- Add the step to swap heights and widths ditcs if the rankDir = LR or RL
         ys =
             positionY rankList 50 0
 
         xs =
             BK.positionX g ( rankList, edges )
+
+        init_coords =
+            combinePoints xs ys
+
+        final_coords =
+            applyRankDir TB init_coords
+
+        -- Add translate function to translate the coordinates and add graph margins
     in
-    combinePoints xs ys
+    final_coords
+
+
+applyRankDir : RankDir -> Dict G.NodeId DU.Coordinates -> Dict G.NodeId DU.Coordinates
+applyRankDir rankDir init_coords =
+    let
+        coords_ =
+            if rankDir == BT || rankDir == RL then
+                Dict.map (\_ ( x, y ) -> ( x, -y )) init_coords
+
+            else
+                init_coords
+    in
+    if rankDir == LR || rankDir == RL then
+        Dict.map (\_ ( x, y ) -> ( y, x )) coords_
+
+    else
+        coords_
