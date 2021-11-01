@@ -43,4 +43,4 @@ tree =
 
 main : Svg msg
 main =
-    R.draw R.svgDrawNode R.svgDrawEdge tree
+    R.draw [] R.svgDrawNode R.svgDrawEdge tree

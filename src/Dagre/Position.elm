@@ -1,16 +1,10 @@
 module Dagre.Position exposing (..)
 
+import Dagre.Attributes exposing (RankDir(..))
 import Dagre.Position.BK as BK exposing (NodePointDict)
 import Dagre.Utils as DU
 import Dict exposing (Dict)
 import Graph as G
-
-
-type RankDir
-    = TB
-    | BT
-    | LR
-    | RL
 
 
 
@@ -101,7 +95,7 @@ position g ( rankList, edges ) =
             combinePoints xs ys
 
         final_coords =
-            applyRankDir TB init_coords
+            applyRankDir LR init_coords
 
         -- Add translate function to translate the coordinates and add graph margins
     in

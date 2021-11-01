@@ -1,6 +1,7 @@
 module Dagre exposing (acg, runLayout)
 
 import Dagre.Acyclic as DA
+import Dagre.Attributes as DAA
 import Dagre.Normalize as DN
 import Dagre.Order as DO
 import Dagre.Position as DP
@@ -8,6 +9,20 @@ import Dagre.Rank as DR
 import Dagre.Utils as DU
 import Dict exposing (Dict)
 import Graph as G
+
+
+defaultConfig =
+    { rankDir = DAA.TB
+    , widthDict = Dict.empty
+    , heightDict = Dict.empty
+    , width = 0
+    , height = 0
+    , nodeSep = 50
+    , edgeSep = 10
+    , rankSep = 50
+    , marginX = 0
+    , marginY = 0
+    }
 
 
 
@@ -31,9 +46,12 @@ import Graph as G
 -}
 
 
-runLayout : G.Graph n e -> ( Dict G.NodeId DU.Coordinates, Dict DU.Edge (List G.NodeId) )
-runLayout graph =
+runLayout : List DAA.Attribute -> G.Graph n e -> ( Dict G.NodeId DU.Coordinates, Dict DU.Edge (List G.NodeId) )
+runLayout edits graph =
     let
+        config =
+            List.foldl (\f a -> f a) defaultConfig edits
+
         ( newGraph, newAcyclicGraph, reversedEdges ) =
             DA.run graph
 
