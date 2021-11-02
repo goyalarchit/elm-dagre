@@ -1,6 +1,6 @@
-module Dagre.Position exposing (..)
+module Dagre.Position exposing (position)
 
-import Dagre.Attributes exposing (RankDir(..))
+import Dagre.Attributes as DA exposing (RankDir(..))
 import Dagre.Position.BK as BK exposing (NodePointDict)
 import Dagre.Utils as DU
 import Dict exposing (Dict)
@@ -30,14 +30,14 @@ import Graph as G
 -}
 
 
-positionY : List DU.Layer -> Float -> Float -> NodePointDict
-positionY rankList rankSep maxHeight =
+positionY : DA.Config -> List DU.Layer -> NodePointDict
+positionY config rankList =
     let
         ys =
             Dict.empty
 
         ( _, ys_assigned ) =
-            List.foldl (assignAbsoluteY rankSep maxHeight) ( 0, ys ) rankList
+            List.foldl (assignAbsoluteY config) ( 0, ys ) rankList
     in
     ys_assigned
 
@@ -48,14 +48,24 @@ positionY rankList rankSep maxHeight =
 -}
 
 
-assignAbsoluteY : Float -> Float -> DU.Layer -> ( Float, NodePointDict ) -> ( Float, NodePointDict )
-assignAbsoluteY rankSep maxHeight l ( currentY, ys ) =
+assignAbsoluteY : DA.Config -> DU.Layer -> ( Float, NodePointDict ) -> ( Float, NodePointDict )
+assignAbsoluteY config l ( currentY, ys ) =
     let
+        getHeight =
+            \n ->
+                Dict.get n config.heightDict
+                    |> Maybe.withDefault config.height
+
+        maxHeight =
+            List.map getHeight l
+                |> List.maximum
+                |> Maybe.withDefault config.height
+
         ys_updated =
             List.foldl (\n ys_ -> Dict.insert n (currentY + maxHeight / 2) ys_) ys l
 
         newY =
-            currentY + maxHeight + rankSep
+            currentY + maxHeight + config.rankSep
     in
     ( newY, ys_updated )
 
@@ -81,12 +91,23 @@ combinePoints xs ys =
     Dict.merge onlyX bothXY onlyY xs ys Dict.empty
 
 
-position : G.Graph n e -> ( List DU.Layer, List DU.Edge ) -> Dict G.NodeId DU.Coordinates
-position g ( rankList, edges ) =
+position : DA.Config -> G.Graph n e -> ( List DU.Layer, List DU.Edge ) -> Dict G.NodeId DU.Coordinates
+position config g ( rankList, edges ) =
     let
-        -- TODO : Add the step to swap heights and widths ditcs if the rankDir = LR or RL
+        adjustedConfig =
+            if config.rankDir == LR || config.rankDir == RL then
+                { config
+                    | widthDict = config.heightDict
+                    , heightDict = config.widthDict
+                    , width = config.height
+                    , height = config.width
+                }
+
+            else
+                config
+
         ys =
-            positionY rankList 50 0
+            positionY adjustedConfig rankList
 
         xs =
             BK.positionX g ( rankList, edges )
@@ -95,7 +116,7 @@ position g ( rankList, edges ) =
             combinePoints xs ys
 
         final_coords =
-            applyRankDir LR init_coords
+            applyRankDir config.rankDir init_coords
 
         -- TODO : Add translate function to translate the coordinates and add graph margins
     in

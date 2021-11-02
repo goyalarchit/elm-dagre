@@ -1,7 +1,7 @@
 module Dagre exposing (acg, runLayout)
 
-import Dagre.Acyclic as DA
-import Dagre.Attributes as DAA
+import Dagre.Acyclic as DAC
+import Dagre.Attributes as DA
 import Dagre.Normalize as DN
 import Dagre.Order as DO
 import Dagre.Position as DP
@@ -11,9 +11,9 @@ import Dict exposing (Dict)
 import Graph as G
 
 
-defaultConfig : DAA.Config
+defaultConfig : DA.Config
 defaultConfig =
-    { rankDir = DAA.TB
+    { rankDir = DA.TB
     , widthDict = Dict.empty
     , heightDict = Dict.empty
     , width = 0
@@ -47,14 +47,14 @@ defaultConfig =
 -}
 
 
-runLayout : List DAA.Attribute -> G.Graph n e -> ( Dict G.NodeId DU.Coordinates, Dict DU.Edge (List G.NodeId) )
+runLayout : List DA.Attribute -> G.Graph n e -> ( Dict G.NodeId DU.Coordinates, Dict DU.Edge (List G.NodeId) )
 runLayout edits graph =
     let
         config =
             List.foldl (\f a -> f a) defaultConfig edits
 
         ( newGraph, newAcyclicGraph, reversedEdges ) =
-            DA.run graph
+            DAC.run graph
 
         edges =
             DU.getEdges newGraph
@@ -69,10 +69,10 @@ runLayout edits graph =
             DO.vertexOrder ( newRankList, newEdges )
 
         finalDict =
-            DP.position newGraph ( bestRankList, newEdges )
+            DP.position config newGraph ( bestRankList, newEdges )
 
         finalControlPoints =
-            DA.undo (DU.getEdges graph) reversedEdges controlPoints
+            DAC.undo (DU.getEdges graph) reversedEdges controlPoints
     in
     ( finalDict, finalControlPoints )
 
