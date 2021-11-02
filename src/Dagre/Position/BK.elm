@@ -1,5 +1,6 @@
 module Dagre.Position.BK exposing (NodePointDict, positionX)
 
+import Dagre.Attributes as DA
 import Dagre.Utils as DU
 import Dict exposing (Dict)
 import Graph as G
@@ -34,19 +35,14 @@ type HorizDir
     | Right
 
 
-nodeWidth =
-    0
-
-
 
 {-
    This function is exposed to other modules and runs the Brandes Kopf, Algorithm 4
-   TODO: Need to add balance subroutine
 -}
 
 
-positionX : G.Graph n e -> ( List DU.Layer, List DU.Edge ) -> NodePointDict
-positionX g ( rankList, edges ) =
+positionX : DA.Config -> G.Graph n e -> ( List DU.Layer, List DU.Edge ) -> NodePointDict
+positionX config g ( rankList, edges ) =
     let
         edgesWithType =
             DU.markEdgesWithEdgeType g edges
@@ -62,16 +58,13 @@ positionX g ( rankList, edges ) =
                 |> List.concat
 
         xss =
-            List.map (\d -> ( d, positionXHelper g ( rankList, edges ) conflicts d )) vhDir
+            List.map (\d -> ( d, positionXHelper config g ( rankList, edges ) conflicts d )) vhDir
 
         smallestWidthAlign =
-            findSmallestWidthAlignment (List.map Tuple.second xss) nodeWidth
+            findSmallestWidthAlignment config (List.map Tuple.second xss)
 
         alignedXss =
             alignCoordinates xss smallestWidthAlign
-
-        -- xs =
-        --     positionXHelper g ( rankList, edges ) conflicts ( Down, Right )
     in
     balance alignedXss
 
@@ -103,8 +96,8 @@ preprocessing ( rankList, edges ) =
 -}
 
 
-positionXHelper : G.Graph n e -> ( List DU.Layer, List DU.Edge ) -> List DU.Edge -> ( VertDir, HorizDir ) -> NodePointDict
-positionXHelper g ( rankList, edges ) conflicts ( vDir, hDir ) =
+positionXHelper : DA.Config -> G.Graph n e -> ( List DU.Layer, List DU.Edge ) -> List DU.Edge -> ( VertDir, HorizDir ) -> NodePointDict
+positionXHelper config g ( rankList, edges ) conflicts ( vDir, hDir ) =
     let
         ( intAdjustedRankList, neighbourFn ) =
             case vDir of
@@ -126,7 +119,7 @@ positionXHelper g ( rankList, edges ) conflicts ( vDir, hDir ) =
             verticalAlignment finalAdjustedRankList conflicts neighbourFn
 
         xs =
-            horizontalCompaction finalAdjustedRankList (sep 50 10 g) root align
+            horizontalCompaction ( config, g ) finalAdjustedRankList root align
     in
     case hDir of
         Left ->
@@ -170,9 +163,12 @@ verticalAlignment rankList conflicts neighbourFn =
 -}
 
 
-horizontalCompaction : List DU.Layer -> (G.NodeId -> G.NodeId -> Float) -> NodeDict -> NodeDict -> NodePointDict
-horizontalCompaction rankList sepFn root align =
+horizontalCompaction : ( DA.Config, G.Graph n e ) -> List DU.Layer -> NodeDict -> NodeDict -> NodePointDict
+horizontalCompaction ( config, g ) rankList root align =
     let
+        sepFn =
+            sep config g
+
         sink =
             Dict.fromList <| List.map (\n -> ( n, n )) (List.concat rankList)
 
@@ -256,8 +252,8 @@ assignAbsoluteX root shift sink v xs =
     xs_v_shifted
 
 
-sep : Float -> Float -> G.Graph n e -> G.NodeId -> G.NodeId -> Float
-sep nodeSep edgeSep g v u =
+sep : DA.Config -> G.Graph n e -> (G.NodeId -> G.NodeId -> Float)
+sep config g =
     let
         initDummyId =
             case G.nodeIdRange g of
@@ -270,12 +266,16 @@ sep nodeSep edgeSep g v u =
         getSep =
             \nId ->
                 if DU.isDummyNode initDummyId nId then
-                    edgeSep
+                    config.edgeSep
 
                 else
-                    nodeSep
+                    config.nodeSep
+
+        getWidth =
+            \n -> width config n
     in
-    (getSep u + getSep v) / 2 + nodeWidth
+    \u v ->
+        (getWidth u + getSep u + getSep v + getWidth v) / 2
 
 
 
@@ -284,24 +284,27 @@ sep nodeSep edgeSep g v u =
 -}
 
 
-findSmallestWidthAlignment : List NodePointDict -> Float -> NodePointDict
-findSmallestWidthAlignment xss w =
+findSmallestWidthAlignment : DA.Config -> List NodePointDict -> NodePointDict
+findSmallestWidthAlignment config xss =
     let
-        minW =
-            \xs -> Dict.map (\k v -> v - (w / 2)) xs |> Dict.values |> List.minimum |> Maybe.withDefault 0
+        getWidth =
+            \n -> width config n
 
-        maxW =
-            \xs -> Dict.map (\k v -> v + (w / 2)) xs |> Dict.values |> List.maximum |> Maybe.withDefault 0
+        minX =
+            \xs -> Dict.map (\k v -> v - (getWidth k / 2)) xs |> Dict.values |> List.minimum |> Maybe.withDefault 0
 
-        xss_ =
-            List.map (\xs -> ( xs, maxW xs - minW xs )) xss
+        maxX =
+            \xs -> Dict.map (\k v -> v + (getWidth k / 2)) xs |> Dict.values |> List.maximum |> Maybe.withDefault 0
 
-        defXs_ =
-            Maybe.withDefault ( Dict.empty, 0 ) (LE.getAt 0 xss_)
+        widthXss =
+            List.map (\xs -> ( maxX xs - minX xs, xs )) xss
+
+        defXs =
+            Maybe.withDefault ( 0, Dict.empty ) (LE.getAt 0 widthXss)
     in
-    LE.minimumBy Tuple.second xss_
-        |> Maybe.withDefault defXs_
-        |> Tuple.first
+    LE.minimumBy Tuple.first widthXss
+        |> Maybe.withDefault defXs
+        |> Tuple.second
 
 
 
@@ -496,7 +499,7 @@ markType1Conflicts edges ( k0, k1 ) l =
             DU.getInEdges l edges |> DU.filterEdgesByType DU.NonInner
 
         conflictingNonInnerEdges =
-            List.filter (\( f, t ) -> checkType1Conflict ( k0, k1 ) f) nonInnerEdges
+            List.filter (\( f, _ ) -> checkType1Conflict ( k0, k1 ) f) nonInnerEdges
     in
     conflictingNonInnerEdges
 
@@ -770,7 +773,8 @@ placeBlockHelper pred sepFn root align v w ( shift, sink, xs ) =
                 placeBlockHelper pred sepFn root align v w_new ( final_shift, final_sink, final_xs )
 
 
-getWidth : Dict G.NodeId Float -> Float -> G.NodeId -> Float
-getWidth widthDict defaultWidth nodeId =
-    Dict.get nodeId widthDict
-        |> Maybe.withDefault defaultWidth
+width : DA.Config -> (G.NodeId -> Float)
+width config =
+    \nodeId ->
+        Dict.get nodeId config.widthDict
+            |> Maybe.withDefault config.width

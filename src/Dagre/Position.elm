@@ -110,7 +110,7 @@ position config g ( rankList, edges ) =
             positionY adjustedConfig rankList
 
         xs =
-            BK.positionX g ( rankList, edges )
+            BK.positionX adjustedConfig g ( rankList, edges )
 
         init_coords =
             combinePoints xs ys

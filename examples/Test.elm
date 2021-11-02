@@ -47,6 +47,7 @@ main =
     R.draw
         [ DA.rankDir DA.LR
         , DA.width 20
+        , DA.height 20
 
         -- , DA.rankSep 75
         ]
