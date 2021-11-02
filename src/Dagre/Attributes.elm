@@ -35,55 +35,71 @@ rankDir rDir =
         { a | rankDir = rDir }
 
 
+
+{-
+   Note :
+   1. The following attributes can not have values < 0
+   2. If value "v" < 0 then absolute value of "v" is used
+-}
+
+
 widthDict : Dict G.NodeId Float -> Attribute
 widthDict dict =
+    let
+        absDict =
+            Dict.map (\_ v -> abs v) dict
+    in
     \a ->
-        { a | widthDict = dict }
+        { a | widthDict = absDict }
 
 
 heightDict : Dict G.NodeId Float -> Attribute
 heightDict dict =
+    let
+        absDict =
+            Dict.map (\_ v -> abs v) dict
+    in
     \a ->
-        { a | heightDict = dict }
+        { a | heightDict = absDict }
 
 
 width : Float -> Attribute
 width w =
     \a ->
-        { a | width = w }
+        { a | width = abs w }
 
 
 height : Float -> Attribute
 height h =
     \a ->
-        { a | height = h }
+        { a | height = abs h }
 
 
 nodeSep : Float -> Attribute
 nodeSep nSep =
     \a ->
-        { a | nodeSep = nSep }
+        { a | nodeSep = abs nSep }
 
 
 edgeSep : Float -> Attribute
 edgeSep eSep =
     \a ->
-        { a | edgeSep = eSep }
+        { a | edgeSep = abs eSep }
 
 
 rankSep : Float -> Attribute
-rankSep rDir =
+rankSep rSep =
     \a ->
-        { a | rankSep = rDir }
+        { a | rankSep = abs rSep }
 
 
 marginX : Float -> Attribute
 marginX mX =
     \a ->
-        { a | marginX = mX }
+        { a | marginX = abs mX }
 
 
 marginY : Float -> Attribute
 marginY mY =
     \a ->
-        { a | marginY = mY }
+        { a | marginY = abs mY }
