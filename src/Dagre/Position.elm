@@ -5,29 +5,7 @@ import Dagre.Position.BK as BK exposing (NodePointDict)
 import Dagre.Utils as DU
 import Dict exposing (Dict)
 import Graph as G
-
-
-
-{-
-   Naming Convention
-   If we get a value from dictionary "dict" for key "v",
-   and store it in a variable, then the name of variable should be
-   dict_v == dict[v]
-   the variable holding the maybe value is named
-   "dict_v_"
-
-   If we update the key "v" in a dictionary "dict",
-   then the new updated dictionary is stored in
-   "dictV"
-
--}
-{-
-   map all the nodes in adjacent layer to their order, and the edges to orders too
-
-
-   after marking one layer's conflicting edges remap them to vertices
-
--}
+import List.Extra as LE
 
 
 positionY : DA.Config -> List DU.Layer -> NodePointDict
@@ -52,9 +30,7 @@ assignAbsoluteY : DA.Config -> DU.Layer -> ( Float, NodePointDict ) -> ( Float, 
 assignAbsoluteY config l ( currentY, ys ) =
     let
         getHeight =
-            \n ->
-                Dict.get n config.heightDict
-                    |> Maybe.withDefault config.height
+            height config
 
         maxHeight =
             List.map getHeight l
@@ -68,6 +44,13 @@ assignAbsoluteY config l ( currentY, ys ) =
             currentY + maxHeight + config.rankSep
     in
     ( newY, ys_updated )
+
+
+height : DA.Config -> (G.NodeId -> Float)
+height config =
+    \n ->
+        Dict.get n config.heightDict
+            |> Maybe.withDefault config.height
 
 
 
@@ -116,11 +99,9 @@ position config g ( rankList, edges ) =
             combinePoints xs ys
 
         final_coords =
-            applyRankDir config.rankDir init_coords
-
-        -- TODO : Add translate function to translate the coordinates and add graph margins
+            applyRankDir adjustedConfig.rankDir init_coords
     in
-    final_coords
+    translate config final_coords
 
 
 applyRankDir : RankDir -> Dict G.NodeId DU.Coordinates -> Dict G.NodeId DU.Coordinates
@@ -138,3 +119,35 @@ applyRankDir rankDir init_coords =
 
     else
         coords_
+
+
+translate : DA.Config -> Dict G.NodeId DU.Coordinates -> Dict G.NodeId DU.Coordinates
+translate config coords =
+    let
+        getWidth =
+            BK.width config
+
+        getHeight =
+            height config
+
+        coordsWithMinXY =
+            Dict.map
+                (\n ( x, y ) -> ( x - getWidth n / 2, y - getHeight n / 2 ))
+                coords
+                |> Dict.values
+
+        minX =
+            (LE.minimumBy Tuple.first coordsWithMinXY
+                |> Maybe.withDefault ( 0, 0 )
+                |> Tuple.first
+            )
+                - config.marginX
+
+        minY =
+            (LE.minimumBy Tuple.second coordsWithMinXY
+                |> Maybe.withDefault ( 0, 0 )
+                |> Tuple.second
+            )
+                - config.marginY
+    in
+    Dict.map (\_ ( x, y ) -> ( x - minX, y - minY )) coords

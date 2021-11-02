@@ -48,6 +48,8 @@ main =
         [ DA.rankDir DA.LR
         , DA.width 20
         , DA.height 20
+        , DA.marginX 20
+        , DA.marginY 20
 
         -- , DA.rankSep 75
         ]

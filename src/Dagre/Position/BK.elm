@@ -1,4 +1,4 @@
-module Dagre.Position.BK exposing (NodePointDict, positionX)
+module Dagre.Position.BK exposing (NodePointDict, positionX, width)
 
 import Dagre.Attributes as DA
 import Dagre.Utils as DU
@@ -8,6 +8,19 @@ import List.Extra as LE
 
 
 
+{-
+   Naming Convention
+   If we get a value from dictionary "dict" for key "v",
+   and store it in a variable, then the name of variable should be
+   dict_v == dict[v]
+   the variable holding the maybe value is named
+   "dict_v_"
+
+   If we update the key "v" in a dictionary "dict",
+   then the new updated dictionary is stored in
+   "dictV"
+
+-}
 {-
    This module provides coordinate assignment based on Brandes and Köpf, "Fast
    and Simple Horizontal Coordinate Assignment."
@@ -415,6 +428,16 @@ findType1Conflicts ( rankList, edges ) =
             DU.getAdjacentLayerPairs rankList
     in
     List.concat <| List.map (type1VisitLayer edges) adjacentLayers
+
+
+
+{-
+   map all the nodes in adjacent layer to their order, and the edges to orders too
+
+
+   after marking one layer's conflicting edges remap them to vertices
+
+-}
 
 
 type1VisitLayer : List DU.EdgeWithType -> ( DU.Layer, DU.Layer ) -> List DU.Edge
