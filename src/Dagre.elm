@@ -11,6 +11,7 @@ import Dict exposing (Dict)
 import Graph as G
 
 
+defaultConfig : DAA.Config
 defaultConfig =
     { rankDir = DAA.TB
     , widthDict = Dict.empty

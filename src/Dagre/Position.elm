@@ -84,7 +84,7 @@ combinePoints xs ys =
 position : G.Graph n e -> ( List DU.Layer, List DU.Edge ) -> Dict G.NodeId DU.Coordinates
 position g ( rankList, edges ) =
     let
-        -- Add the step to swap heights and widths ditcs if the rankDir = LR or RL
+        -- TODO : Add the step to swap heights and widths ditcs if the rankDir = LR or RL
         ys =
             positionY rankList 50 0
 
@@ -97,7 +97,7 @@ position g ( rankList, edges ) =
         final_coords =
             applyRankDir LR init_coords
 
-        -- Add translate function to translate the coordinates and add graph margins
+        -- TODO : Add translate function to translate the coordinates and add graph margins
     in
     final_coords
 

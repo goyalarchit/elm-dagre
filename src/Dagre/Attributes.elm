@@ -4,10 +4,10 @@ import Dict exposing (Dict)
 import Graph as G
 
 
-type alias Attributes =
+type alias Config =
     { rankDir : RankDir
-    , widthDict : Dimension
-    , heightDict : Dimension
+    , widthDict : Dict G.NodeId Float
+    , heightDict : Dict G.NodeId Float
     , width : Float
     , height : Float
     , nodeSep : Float
@@ -25,12 +25,8 @@ type RankDir
     | RL
 
 
-type alias Dimension =
-    Dict G.NodeId Float
-
-
 type alias Attribute =
-    Attributes -> Attributes
+    Config -> Config
 
 
 rankDir : RankDir -> Attribute
@@ -39,13 +35,13 @@ rankDir rDir =
         { a | rankDir = rDir }
 
 
-widthDict : Dimension -> Attribute
+widthDict : Dict G.NodeId Float -> Attribute
 widthDict dict =
     \a ->
         { a | widthDict = dict }
 
 
-heightDict : Dimension -> Attribute
+heightDict : Dict G.NodeId Float -> Attribute
 heightDict dict =
     \a ->
         { a | heightDict = dict }
