@@ -1,4 +1,4 @@
-module Render exposing (draw, svgDrawEdge, svgDrawNode)
+module Render exposing (draw, svgDrawEdge, svgDrawEdge2, svgDrawNode)
 
 -- import TypedSvg.Events exposing (onClick)
 
@@ -7,6 +7,7 @@ import Dagre as D
 import Dagre.Attributes as DA
 import Dict
 import Graph as G exposing (Edge, Graph, Node)
+import Spline as S
 import TypedSvg as TS exposing (g, polyline)
 import TypedSvg.Attributes as TA exposing (class, fill, points, stroke, textAnchor, transform)
 import TypedSvg.Attributes.InPx exposing (cx, cy, r, x, y)
@@ -61,6 +62,18 @@ svgDrawEdge : EdgeDrawer () (Svg msg)
 svgDrawEdge _ ( sourceX, sourceY ) ( targetX, targetY ) controlPts =
     polyline
         [ points <| List.concat [ [ ( sourceX, sourceY ) ], controlPts, [ ( targetX, targetY ) ] ]
+        , stroke <| Paint Color.black
+        , TA.strokeWidth <| Px 2
+        , fill PaintNone
+        , TA.markerEnd "url(#arrow-head)"
+        ]
+        []
+
+
+svgDrawEdge2 : EdgeDrawer () (Svg msg)
+svgDrawEdge2 _ ( sourceX, sourceY ) ( targetX, targetY ) controlPts =
+    TS.path
+        [ S.spline 0.2 ( sourceX, sourceY ) ( targetX, targetY ) controlPts
         , stroke <| Paint Color.black
         , TA.strokeWidth <| Px 2
         , fill PaintNone

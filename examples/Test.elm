@@ -54,5 +54,5 @@ main =
         -- , DA.rankSep 75
         ]
         R.svgDrawNode
-        R.svgDrawEdge
+        R.svgDrawEdge2
         tree
