@@ -1,9 +1,8 @@
 module Test exposing (..)
 
--- import Html.Attributes exposing()
-
 import Dagre.Attributes as DA
 import Graph as G
+import Html
 import Render as R
 import Svg exposing (Svg)
 
@@ -42,17 +41,21 @@ tree =
         ]
 
 
-main : Svg msg
+type Msg
+    = None
+
+
+main : Html.Html Msg
 main =
     R.draw
         [ DA.rankDir DA.LR
         , DA.width 20
         , DA.height 20
-        , DA.marginX 20
-        , DA.marginY 20
 
+        -- , DA.marginX 20
+        -- , DA.marginY 20
         -- , DA.rankSep 75
         ]
         R.svgDrawNode
-        R.svgDrawEdge2
+        (R.svgDrawEdge2 [ R.label (\e -> String.fromInt e.from) ])
         tree

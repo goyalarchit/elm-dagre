@@ -1,4 +1,4 @@
-module Dagre exposing (acg, runLayout)
+module Dagre exposing (acg, defaultConfig, runLayout)
 
 import Dagre.Acyclic as DAC
 import Dagre.Attributes as DA

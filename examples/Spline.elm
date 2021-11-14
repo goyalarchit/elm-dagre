@@ -10,6 +10,11 @@ import TypedSvg.Attributes as TA
 import TypedSvg.Core as TC
 
 
+type LinkStyle
+    = Spline
+    | PolyLine
+
+
 type alias Coord =
     ( Float, Float )
 
