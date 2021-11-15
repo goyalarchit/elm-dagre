@@ -1,7 +1,7 @@
 {
     "type": "application",
     "source-directories": [
-        "src" ,
+        "src",
         "examples"
     ],
     "elm-version": "0.19.1",
@@ -23,6 +23,7 @@
             "elm-community/random-extra": "3.1.0",
             "elm-community/typed-svg": "6.0.0",
             "fapian/elm-html-aria": "1.4.0",
+            "folkertdev/one-true-path-experiment": "5.0.2",
             "gampleman/elm-visualization": "2.1.2"
         },
         "indirect": {
@@ -33,7 +34,6 @@
             "elm/url": "1.0.0",
             "elm/virtual-dom": "1.0.2",
             "folkertdev/elm-deque": "3.0.1",
-            "folkertdev/one-true-path-experiment": "5.0.2",
             "folkertdev/svg-path-lowlevel": "3.0.0",
             "ianmackenzie/elm-1d-parameter": "1.0.1",
             "ianmackenzie/elm-float-extra": "1.1.0",
