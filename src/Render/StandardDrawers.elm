@@ -1,10 +1,27 @@
-module Dagre.Render.Drawers exposing (..)
+module Render.StandardDrawers exposing (..)
+
+{-| This module provides the standard Drawers for drawing a graph. These are
+default drawers for the draw function.
+
+
+# Standard Drawers
+
+@docs svgEdgeDrawer, svgNodeDrawer
+
+
+## Standard Configurations
+
+@docs defEdgeDrawerConfig, defNodeDrawerConfig
+
+-}
 
 import Color
 import Curve
-import Dagre.Render.Attributes as DRA exposing (ArrowHeadShape(..), Attribute, EdgeDrawerConfig, LinkStyle(..), NodeDrawerConfig, Shape(..))
-import Dagre.Render.Types exposing (..)
-import Graph exposing (Edge, Node)
+import Graph exposing (Node)
+import Render.StandardDrawers.Attributes exposing (Attribute)
+import Render.StandardDrawers.ConfigTypes exposing (..)
+import Render.StandardDrawers.Types exposing (..)
+import Render.Types exposing (..)
 import SubPath as SP
 import TypedSvg as TS exposing (g, polyline)
 import TypedSvg.Attributes as TA exposing (class, points, stroke, textAnchor, transform)
@@ -44,6 +61,7 @@ defEdgeDrawerConfig =
     , title = f
     , linkStyle = Spline
     , alpha = 0.5
+    , orientLabelAlongEdge = False
     }
 
 
@@ -180,7 +198,7 @@ svgDrawNode edits nodeAtrib =
         [ TS.circle
             [ r (d / 2)
             , TA.stroke <| Paint Color.blue
-            , TA.fill <| Paint Color.white
+            , TA.fill <| Paint (Color.rgb255 178 235 242)
             , cx posX
             , cy posY
             ]

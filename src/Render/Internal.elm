@@ -1,4 +1,4 @@
-module Dagre.Render.Internal exposing (..)
+module Render.Internal exposing (..)
 
 {-
    This module is a functional implementation of the method I found here

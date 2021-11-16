@@ -1,11 +1,4 @@
-module Dagre.Render.Attributes exposing (..)
-
--- import Dagre.Render.Internal exposing (LinkStyle(..))
-
-import Dagre.Render.Types as DRT exposing (..)
-import Graph exposing (Edge, Node)
-import TypedSvg.Types exposing (Length(..), Paint(..))
-
+module Render.StandardDrawers.Attributes exposing (..)
 
 {-| This module provides attributes for configuring draw, svgNodeDrawer
 and svgEdgeDrawer given in Dagre.Render.
@@ -14,20 +7,9 @@ and svgEdgeDrawer given in Dagre.Render.
 as elm/svg.
 
 
-# Drawer Configuration Types
-
-@docs EdgeDrawerConfig, NodeDrawerConfig
-
-
-# Draw Attributes
-
-@docs edgeDrawer, nodeDrawer
-
-
 # Common Attributes
 
 The following attributes can be used both on Node and Edge Drawers.
-**Note** the title attribute is also supported by the drawConfig.
 
 @docs fill, label, onClick, strokeColor, strokeWidth, strokeDashArray, style, title
 
@@ -42,80 +24,15 @@ The following attributes can be used both on Node and Edge Drawers.
 @docs shape, xLabel, xLabelPos
 
 -}
+
+import Graph exposing (Node)
+import Render.StandardDrawers.ConfigTypes exposing (..)
+import Render.StandardDrawers.Types as RSDT exposing (..)
+import TypedSvg.Types exposing (Length(..), Paint(..))
+
+
 type alias Attribute c =
     c -> c
-
-
-type ArrowHeadShape
-    = None
-    | Triangle
-    | Vee
-
-
-type LinkStyle
-    = Polyline
-    | Spline
-
-
-type Shape
-    = Circle
-    | Ellipse
-    | Box
-    | RoundedBox Float
-
-
-{-| This attribute sets the edge drawer for draw function
-Update the standard drawer configs using this attribute
--}
-edgeDrawer : EdgeDrawer e msg -> Attribute (DrawConfig n e msg)
-edgeDrawer f =
-    \dc ->
-        { dc | edgeDrawer = f }
-
-
-{-| This attribute sets the node drawer for draw function
-Update the drawer config using this attribute
--}
-nodeDrawer : NodeDrawer n msg -> Attribute (DrawConfig n e msg)
-nodeDrawer f =
-    \dc ->
-        { dc | nodeDrawer = f }
-
-
-{-| This type represents all the attributes configurable for the
-standard Edge Drawer
--}
-type alias EdgeDrawerConfig e msg =
-    { label : Edge e -> String
-    , arrowHead : ArrowHeadShape
-    , onClick : Maybe (Edge e -> msg)
-    , strokeColor : Edge e -> Paint
-    , strokeWidth : Edge e -> Length
-    , strokeDashArray : Edge e -> String
-    , style : Edge e -> String
-    , fill : Edge e -> Paint
-    , title : Edge e -> String
-    , linkStyle : LinkStyle
-    , alpha : Float
-    }
-
-
-{-| This type represents all the attributes configurable for the
-standard Node Drawer
--}
-type alias NodeDrawerConfig n msg =
-    { label : Node n -> String
-    , shape : Shape
-    , onClick : Maybe (Node n -> msg)
-    , strokeColor : Node n -> Paint
-    , strokeWidth : Node n -> Length
-    , strokeDashArray : Node n -> String
-    , style : Node n -> String
-    , fill : Node n -> Paint
-    , title : Node n -> String
-    , xLabel : Node n -> String
-    , xLabelPos : Node n -> Float -> Float -> ( Float, Float )
-    }
 
 
 {-| The following attribute can be used to set label on both Nodes and Edges.
@@ -153,9 +70,6 @@ strokeDashArray f =
 
 
 {-| To add any inline css to path element of the edge, or polygon of node.
-
-**NOTE**:This attribute can also be used on draw, to add inline css to final svg.
-
 -}
 style : (a -> String) -> Attribute { c | style : Maybe (a -> String) }
 style f =
@@ -240,3 +154,11 @@ alpha : Float -> Attribute (EdgeDrawerConfig e msg)
 alpha a =
     \edc ->
         { edc | alpha = a }
+
+
+{-| To set the label orientation along the curvature of edge
+-}
+orientLabelAlongEdge : Bool -> Attribute (EdgeDrawerConfig e msg)
+orientLabelAlongEdge b =
+    \edc ->
+        { edc | orientLabelAlongEdge = b }

@@ -1,11 +1,11 @@
 module Test exposing (..)
 
 import Dagre.Attributes as DA
-import Dagre.Render as R
-import Dagre.Render.Attributes as DRA
-import Dagre.Render.Drawers as DRD
 import Graph as G
 import Html
+import Render as R
+import Render.StandardDrawers as DRD
+import Render.StandardDrawers.Attributes as RSDA
 
 
 
@@ -54,14 +54,14 @@ main =
         , DA.height 32
         , DA.marginX 20
         , DA.marginY 20
-
-        -- , DA.rankSep 75
+        , DA.rankSep 75
         ]
         -- []
-        [ DRA.nodeDrawer
+        [ R.nodeDrawer
             (DRD.svgDrawNode
-                [ DRA.xLabel (\n -> String.fromInt n.id)
-                , DRA.label (\n -> String.fromInt (n.id + 1))
+                [ RSDA.xLabel (\n -> String.fromInt n.id)
+
+                -- , RSDA.label (\n -> String.fromInt (n.id + )
                 ]
             )
         ]
