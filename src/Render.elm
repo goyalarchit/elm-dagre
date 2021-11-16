@@ -105,45 +105,13 @@ edgeDrawing edge_ drawEdge_ coordDict controlPointsDict =
     drawEdge_ (EdgeAttributes edge_ sourcePos targetPos ctrlPts)
 
 
-getCoordDict : List DA.Attribute -> Graph n e -> D.GraphLayout
-getCoordDict edits graph =
-    D.runLayout edits graph
-
-
-getCanvasSize : Dict.Dict G.NodeId ( Float, Float ) -> ( ( Float, Float ), ( Float, Float ) )
-getCanvasSize coordDict =
-    let
-        coords =
-            Dict.values coordDict
-
-        xCoords =
-            List.map (\( x, _ ) -> x) coords
-
-        yCoords =
-            List.map (\( _, y ) -> y) coords
-
-        minX =
-            Maybe.withDefault -100.0 (List.minimum xCoords) - 100
-
-        minY =
-            Maybe.withDefault -100.0 (List.minimum yCoords) - 100
-
-        maxX =
-            Maybe.withDefault 200.0 (List.maximum xCoords)
-
-        maxY =
-            Maybe.withDefault 400.0 (List.maximum yCoords)
-    in
-    ( ( minX, minY ), ( maxX - minX + 100, maxY - minY + 100 ) )
-
-
 
 {- defualt config for the draw function -}
 
 
 defDrawConfig : DrawConfig n e msg
 defDrawConfig =
-    { edgeDrawer = DRD.svgDrawEdge2 []
+    { edgeDrawer = DRD.svgDrawEdge []
     , nodeDrawer = DRD.svgDrawNode []
     , style = ""
     }
@@ -172,8 +140,6 @@ draw edits1 edits2 graph =
         { width, height, coordDict, controlPtsDict } =
             D.runLayout edits1 graph
 
-        -- ( ( minX, minY ), ( w, h ) ) =
-        --     getCanvasSize coordDict
         dagreConfig =
             List.foldl (\f a -> f a) D.defaultConfig edits1
 
@@ -187,15 +153,11 @@ draw edits1 edits2 graph =
             g [ class [ "nodes" ] ] <| List.map (\n -> nodeDrawing n drawConfig.nodeDrawer coordDict dagreConfig) <| G.nodes graph
     in
     TS.svg
-        [ --   TA.width (Px w)
-          -- , TA.height (Px h)
-          TA.viewBox 0 0 width height
-        , TA.style "height: 100vh;"
-
-        -- , TA.display DisplayInline
+        [ TA.viewBox 0 0 width height
+        , TA.style drawConfig.style
         ]
         [ TS.defs [] [ triangleHeadElement, veeHeadElement ]
-        , g [] [ edgesSvg, nodesSvg ]
+        , g [ TA.id "graph0" ] [ edgesSvg, nodesSvg ]
         ]
 
 
@@ -233,8 +195,9 @@ triangleHeadElement : Svg msg
 triangleHeadElement =
     TS.marker
         [ TA.id "triangle-head"
-        , TA.markerWidth <| Px 10
-        , TA.markerHeight <| Px 10
+        , TA.viewBox 0 0 9 6
+        , TA.markerWidth <| Px 4
+        , TA.markerHeight <| Px 4
         , TA.refX "16"
         , TA.refY "3"
         , TA.orient "auto"
@@ -242,6 +205,7 @@ triangleHeadElement =
         ]
         [ TS.path
             [ TA.d "M0,0 L0,6 L9,3 z"
+            , TA.stroke ContextStroke
             ]
             []
         ]
@@ -261,6 +225,7 @@ veeHeadElement =
         [ TS.path
             [ TA.d "M0,0 L4.5,3 L0,6 L9,3 z"
             , TA.fill ContextFill
+            , TA.stroke ContextStroke
             ]
             []
         ]

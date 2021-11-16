@@ -6,6 +6,8 @@ import Html
 import Render as R
 import Render.StandardDrawers as DRD
 import Render.StandardDrawers.Attributes as RSDA
+import Render.StandardDrawers.Types as RSDT
+import TypedSvg.Types as TT
 
 
 
@@ -64,5 +66,13 @@ main =
                 -- , RSDA.label (\n -> String.fromInt (n.id + )
                 ]
             )
+        , R.edgeDrawer
+            (DRD.svgDrawEdge
+                [ RSDA.arrowHead RSDT.Triangle
+                , RSDA.strokeWidth (\_ -> TT.Px 5)
+                , RSDA.label (\e -> String.fromInt e.from ++ " to " ++ String.fromInt e.to)
+                ]
+            )
+        , R.style "height: 100vh;"
         ]
         tree

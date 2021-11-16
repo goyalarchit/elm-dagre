@@ -15,6 +15,7 @@ default drawers for the draw function.
 
 -}
 
+import Bootstrap.Accordion exposing (config)
 import Color
 import Curve
 import Graph exposing (Node)
@@ -23,11 +24,12 @@ import Render.StandardDrawers.ConfigTypes exposing (..)
 import Render.StandardDrawers.Types exposing (..)
 import Render.Types exposing (..)
 import SubPath as SP
-import TypedSvg as TS exposing (g, polyline)
-import TypedSvg.Attributes as TA exposing (class, points, stroke, textAnchor, transform)
+import TypedSvg as TS exposing (g)
+import TypedSvg.Attributes as TA
 import TypedSvg.Attributes.InPx exposing (cx, cy, r, x, y)
 import TypedSvg.Core as TC exposing (Svg)
-import TypedSvg.Types
+import TypedSvg.Events as TE
+import TypedSvg.Types as TT
     exposing
         ( AlignmentBaseline(..)
         , AnchorAlignment(..)
@@ -61,7 +63,6 @@ defEdgeDrawerConfig =
     , title = f
     , linkStyle = Spline
     , alpha = 0.5
-    , orientLabelAlongEdge = False
     }
 
 
@@ -88,82 +89,103 @@ defNodeDrawerConfig =
     }
 
 
-svgDrawEdge : EdgeDrawer () msg
-svgDrawEdge edgeAtrib =
+arrowHeadId : ArrowHeadShape -> String
+arrowHeadId ah =
+    case ah of
+        None ->
+            ""
+
+        Triangle ->
+            "url(#triangle-head)"
+
+        Vee ->
+            "url(#vee-head)"
+
+
+svgDrawEdge : List (Attribute (EdgeDrawerConfig e msg)) -> EdgeDrawer e msg
+svgDrawEdge edits edgeAtrib =
     let
         edge =
             edgeAtrib.edge
-
-        ( sourceX, sourceY ) =
-            edgeAtrib.source
-
-        ( targetX, targetY ) =
-            edgeAtrib.target
-
-        controlPts =
-            edgeAtrib.controlPts
-    in
-    polyline
-        [ TA.points <| List.concat [ [ ( sourceX, sourceY ) ], controlPts, [ ( targetX, targetY ) ] ]
-        , TA.stroke <| Paint Color.black
-        , TA.strokeWidth <| Px 2
-        , TA.fill PaintNone
-        , TA.markerEnd "url(#triangle-head)"
-        ]
-        []
-
-
-svgDrawEdge2 : List (Attribute (EdgeDrawerConfig e msg)) -> EdgeDrawer e msg
-svgDrawEdge2 edits edgeAtrib =
-    let
-        edge =
-            edgeAtrib.edge
-
-        ( sourceX, sourceY ) =
-            edgeAtrib.source
-
-        ( targetX, targetY ) =
-            edgeAtrib.target
-
-        controlPts =
-            edgeAtrib.controlPts
 
         config =
             List.foldl (\f a -> f a) defEdgeDrawerConfig edits
 
         curve =
-            Curve.catmullRom config.alpha (List.concat [ [ edgeAtrib.source ], edgeAtrib.controlPts, [ edgeAtrib.target ] ])
+            let
+                pts =
+                    List.concat [ [ edgeAtrib.source ], edgeAtrib.controlPts, [ edgeAtrib.target ] ]
+            in
+            case config.linkStyle of
+                Spline ->
+                    Curve.catmullRom config.alpha pts
 
-        tolerance =
-            1.0e-4
+                Polyline ->
+                    Curve.linear pts
 
-        parameterized =
-            SP.arcLengthParameterized tolerance curve
+        parameterizedCurve =
+            SP.arcLengthParameterized 1.0e-4 curve
 
         ( midX, midY ) =
-            case SP.pointAlong parameterized (SP.arcLength parameterized / 2) of
+            (case SP.pointAlong parameterizedCurve (SP.arcLength parameterizedCurve / 2) of
                 Just m ->
                     m
 
                 Nothing ->
                     ( -10, -10 )
+            )
+                |> Tuple.mapBoth
+                    (\a ->
+                        if isNaN a then
+                            -10
+
+                        else
+                            a
+                    )
+                    (\a ->
+                        if isNaN a then
+                            -10
+
+                        else
+                            a
+                    )
+
+        edge_id =
+            "edge-" ++ String.fromInt edge.from ++ "-" ++ String.fromInt edge.to
+
+        gAtrib =
+            case config.onClick of
+                Nothing ->
+                    [ TA.id edge_id
+                    , TA.class [ "edge" ]
+                    , TA.style <| config.style edge
+                    , TA.markerEnd (arrowHeadId config.arrowHead)
+                    ]
+
+                Just f ->
+                    [ TA.id edge_id
+                    , TA.class [ "edge" ]
+                    , TA.style <| config.style edge
+                    , TA.markerEnd (arrowHeadId config.arrowHead)
+                    , TE.onClick (f edge)
+                    ]
     in
     g
-        []
+        gAtrib
         [ TS.title [] [ TC.text <| config.title edge ]
         , TS.path
-            [ TA.d <| SP.toString curve
-
-            -- [ DRI.spline 0.2 ( sourceX, sourceY ) ( targetX, targetY ) controlPts
+            [ TA.id (edge_id ++ "-path")
+            , TA.d <| SP.toString curve
             , TA.stroke <| config.strokeColor edge
             , TA.strokeWidth <| config.strokeWidth edge
+            , TA.strokeDasharray <| config.strokeDashArray edge
             , TA.fill (config.fill edge)
-            , TA.markerEnd "url(#vee-head)"
             ]
             []
         , TS.text_
-            [ textAnchor AnchorMiddle
-            , transform [ Translate midX (midY + 5) ]
+            [ TA.textAnchor AnchorMiddle
+            , TA.alignmentBaseline AlignmentCentral
+            , TA.transform [ Translate midX midY ]
             ]
             [ TC.text (config.label edge) ]
         ]
@@ -204,8 +226,9 @@ svgDrawNode edits nodeAtrib =
             ]
             []
         , TS.text_
-            [ textAnchor AnchorMiddle
-            , transform [ Translate posX (posY + 5) ]
+            [ TA.textAnchor AnchorMiddle
+            , TA.alignmentBaseline AlignmentCentral
+            , TA.transform [ Translate posX posY ]
             ]
             [ TC.text lbl ]
         , xLabelDrawer (config.xLabel node) config.xLabelPos nodeAtrib
@@ -225,8 +248,9 @@ xLabelDrawer lbl xLabelPos nodeAtrib =
             ( posX + xPosX, posY + xPosY )
     in
     TS.text_
-        [ textAnchor AnchorMiddle
-        , transform [ Translate xlPosX xlPosY ]
+        [ TA.textAnchor AnchorMiddle
+        , TA.alignmentBaseline AlignmentCentral
+        , TA.transform [ Translate xlPosX xlPosY ]
         ]
         [ TC.text lbl
         ]

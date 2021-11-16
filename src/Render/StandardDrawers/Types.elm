@@ -31,6 +31,7 @@ type LinkStyle
 
 
 {-| This type represents the shape of node.
+_Note_ : RoundedBox takes radius of curvature in px as parameter
 -}
 type Shape
     = Circle

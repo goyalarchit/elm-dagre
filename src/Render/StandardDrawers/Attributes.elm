@@ -27,7 +27,7 @@ The following attributes can be used both on Node and Edge Drawers.
 
 import Graph exposing (Node)
 import Render.StandardDrawers.ConfigTypes exposing (..)
-import Render.StandardDrawers.Types as RSDT exposing (..)
+import Render.StandardDrawers.Types exposing (ArrowHeadShape, LinkStyle, Shape)
 import TypedSvg.Types exposing (Length(..), Paint(..))
 
 
@@ -156,9 +156,11 @@ alpha a =
         { edc | alpha = a }
 
 
-{-| To set the label orientation along the curvature of edge
--}
-orientLabelAlongEdge : Bool -> Attribute (EdgeDrawerConfig e msg)
-orientLabelAlongEdge b =
-    \edc ->
-        { edc | orientLabelAlongEdge = b }
+
+-- Need to look into this, lay edge labels along the curvature
+-- {-| To set the label orientation along the curvature of edge
+-- -}
+-- orientLabelAlongEdge : Bool -> Attribute (EdgeDrawerConfig e msg)
+-- orientLabelAlongEdge b =
+--     \edc ->
+--         { edc | orientLabelAlongEdge = b }

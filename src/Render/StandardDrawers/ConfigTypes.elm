@@ -29,7 +29,6 @@ type alias EdgeDrawerConfig e msg =
     , title : Edge e -> String
     , linkStyle : LinkStyle
     , alpha : Float
-    , orientLabelAlongEdge : Bool
     }
 
 
