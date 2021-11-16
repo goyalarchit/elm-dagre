@@ -1,4 +1,4 @@
-module Dagre exposing (acg, defaultConfig, runLayout)
+module Dagre exposing (GraphLayout, acg, defaultConfig, runLayout)
 
 import Dagre.Acyclic as DAC
 import Dagre.Attributes as DA
@@ -9,6 +9,14 @@ import Dagre.Rank as DR
 import Dagre.Utils as DU
 import Dict exposing (Dict)
 import Graph as G
+
+
+type alias GraphLayout =
+    { width : Float
+    , height : Float
+    , coordDict : Dict G.NodeId DU.Coordinates
+    , controlPtsDict : Dict DU.Edge (List G.NodeId)
+    }
 
 
 defaultConfig : DA.Config
@@ -47,7 +55,7 @@ defaultConfig =
 -}
 
 
-runLayout : List DA.Attribute -> G.Graph n e -> ( Dict G.NodeId DU.Coordinates, Dict DU.Edge (List G.NodeId) )
+runLayout : List DA.Attribute -> G.Graph n e -> GraphLayout
 runLayout edits graph =
     let
         config =
@@ -68,13 +76,17 @@ runLayout edits graph =
         bestRankList =
             DO.vertexOrder ( newRankList, newEdges )
 
-        finalDict =
+        ( finalDict, ( w, h ) ) =
             DP.position config newGraph ( bestRankList, newEdges )
 
         finalControlPoints =
             DAC.undo (DU.getEdges graph) reversedEdges controlPoints
     in
-    ( finalDict, finalControlPoints )
+    { width = w
+    , height = h
+    , coordDict = finalDict
+    , controlPtsDict = finalControlPoints
+    }
 
 
 acg : G.Graph Int ()

@@ -105,7 +105,7 @@ edgeDrawing edge_ drawEdge_ coordDict controlPointsDict =
     drawEdge_ (EdgeAttributes edge_ sourcePos targetPos ctrlPts)
 
 
-getCoordDict : List DA.Attribute -> Graph n e -> ( Dict.Dict G.NodeId ( Float, Float ), Dict.Dict ( G.NodeId, G.NodeId ) (List G.NodeId) )
+getCoordDict : List DA.Attribute -> Graph n e -> D.GraphLayout
 getCoordDict edits graph =
     D.runLayout edits graph
 
@@ -169,12 +169,11 @@ next subsection for more information.
 draw : List DA.Attribute -> List (Attribute (DrawConfig n e msg)) -> Graph n e -> Html msg
 draw edits1 edits2 graph =
     let
-        ( coordDict, controlPointsDict ) =
-            getCoordDict edits1 graph
+        { width, height, coordDict, controlPtsDict } =
+            D.runLayout edits1 graph
 
-        ( ( minX, minY ), ( w, h ) ) =
-            getCanvasSize coordDict
-
+        -- ( ( minX, minY ), ( w, h ) ) =
+        --     getCanvasSize coordDict
         dagreConfig =
             List.foldl (\f a -> f a) D.defaultConfig edits1
 
@@ -182,7 +181,7 @@ draw edits1 edits2 graph =
             List.foldl (\f a -> f a) defDrawConfig edits2
 
         edgesSvg =
-            g [ class [ "links" ] ] <| List.map (\e -> edgeDrawing e drawConfig.edgeDrawer coordDict controlPointsDict) <| G.edges graph
+            g [ class [ "links" ] ] <| List.map (\e -> edgeDrawing e drawConfig.edgeDrawer coordDict controlPtsDict) <| G.edges graph
 
         nodesSvg =
             g [ class [ "nodes" ] ] <| List.map (\n -> nodeDrawing n drawConfig.nodeDrawer coordDict dagreConfig) <| G.nodes graph
@@ -190,7 +189,7 @@ draw edits1 edits2 graph =
     TS.svg
         [ --   TA.width (Px w)
           -- , TA.height (Px h)
-          TA.viewBox 0 0 w h
+          TA.viewBox 0 0 width height
         , TA.style "height: 100vh;"
 
         -- , TA.display DisplayInline

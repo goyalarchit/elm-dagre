@@ -74,7 +74,7 @@ combinePoints xs ys =
     Dict.merge onlyX bothXY onlyY xs ys Dict.empty
 
 
-position : DA.Config -> G.Graph n e -> ( List DU.Layer, List DU.Edge ) -> Dict G.NodeId DU.Coordinates
+position : DA.Config -> G.Graph n e -> ( List DU.Layer, List DU.Edge ) -> ( Dict G.NodeId DU.Coordinates, ( Float, Float ) )
 position config g ( rankList, edges ) =
     let
         adjustedConfig =
@@ -121,7 +121,7 @@ applyRankDir rankDir init_coords =
         coords_
 
 
-translate : DA.Config -> Dict G.NodeId DU.Coordinates -> Dict G.NodeId DU.Coordinates
+translate : DA.Config -> Dict G.NodeId DU.Coordinates -> ( Dict G.NodeId DU.Coordinates, ( Float, Float ) )
 translate config coords =
     let
         getWidth =
@@ -133,6 +133,12 @@ translate config coords =
         coordsWithMinXY =
             Dict.map
                 (\n ( x, y ) -> ( x - getWidth n / 2, y - getHeight n / 2 ))
+                coords
+                |> Dict.values
+
+        coordsWithMaxXY =
+            Dict.map
+                (\n ( x, y ) -> ( x + getWidth n / 2, y + getHeight n / 2 ))
                 coords
                 |> Dict.values
 
@@ -149,5 +155,21 @@ translate config coords =
                 |> Tuple.second
             )
                 - config.marginY
+
+        maxX =
+            (LE.maximumBy Tuple.first coordsWithMaxXY
+                |> Maybe.withDefault ( 500, 500 )
+                |> Tuple.first
+            )
+                - minX
+                + config.marginX
+
+        maxY =
+            (LE.maximumBy Tuple.second coordsWithMaxXY
+                |> Maybe.withDefault ( 500, 500 )
+                |> Tuple.second
+            )
+                - minY
+                + config.marginY
     in
-    Dict.map (\_ ( x, y ) -> ( x - minX, y - minY )) coords
+    ( Dict.map (\_ ( x, y ) -> ( x - minX, y - minY )) coords, ( maxX, maxY ) )
