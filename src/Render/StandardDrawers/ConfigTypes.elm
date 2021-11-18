@@ -9,9 +9,9 @@ module Render.StandardDrawers.ConfigTypes exposing (..)
 
 -}
 
+import Color exposing (Color)
 import Graph exposing (Edge, Node)
 import Render.StandardDrawers.Types exposing (..)
-import TypedSvg.Types exposing (Length(..), Paint(..))
 
 
 {-| This type represents all the attributes configurable for the
@@ -21,14 +21,14 @@ type alias EdgeDrawerConfig e msg =
     { label : Edge e -> String
     , arrowHead : ArrowHeadShape
     , onClick : Maybe (Edge e -> msg)
-    , strokeColor : Edge e -> Paint
-    , strokeWidth : Edge e -> Length
+    , strokeColor : Edge e -> Color
+    , strokeWidth : Edge e -> Float
     , strokeDashArray : Edge e -> String
     , style : Edge e -> String
-    , fill : Edge e -> Paint
     , title : Edge e -> String
     , linkStyle : LinkStyle
     , alpha : Float
+    , orientLabelAlongEdge : Bool
     }
 
 
@@ -42,11 +42,11 @@ type alias NodeDrawerConfig n msg =
     { label : Node n -> String
     , shape : Shape
     , onClick : Maybe (Node n -> msg)
-    , strokeColor : Node n -> Paint
-    , strokeWidth : Node n -> Length
+    , strokeColor : Node n -> Color
+    , strokeWidth : Node n -> Float
     , strokeDashArray : Node n -> String
     , style : Node n -> String
-    , fill : Node n -> Paint
+    , fill : Node n -> Color
     , title : Node n -> String
     , xLabel : Node n -> String
     , xLabelPos : Node n -> Float -> Float -> ( Float, Float )

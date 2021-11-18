@@ -41,6 +41,8 @@ type alias EdgeAttributes e =
     , source : ( Float, Float )
     , target : ( Float, Float )
     , controlPts : List ( Float, Float )
+    , sourceDimensions : ( Float, Float )
+    , targetDimensions : ( Float, Float )
     }
 
 

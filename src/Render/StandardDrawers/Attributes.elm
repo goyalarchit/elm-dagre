@@ -25,10 +25,10 @@ The following attributes can be used both on Node and Edge Drawers.
 
 -}
 
+import Color exposing (Color)
 import Graph exposing (Node)
 import Render.StandardDrawers.ConfigTypes exposing (..)
 import Render.StandardDrawers.Types exposing (ArrowHeadShape, LinkStyle, Shape)
-import TypedSvg.Types exposing (Length(..), Paint(..))
 
 
 type alias Attribute c =
@@ -51,13 +51,13 @@ onClick f =
         { edc | onClick = Just f }
 
 
-strokeColor : (a -> Paint) -> Attribute { c | strokeColor : a -> Paint }
+strokeColor : (a -> Color) -> Attribute { c | strokeColor : a -> Color }
 strokeColor f =
     \edc ->
         { edc | strokeColor = f }
 
 
-strokeWidth : (a -> Length) -> Attribute { c | strokeWidth : a -> Length }
+strokeWidth : (a -> Float) -> Attribute { c | strokeWidth : a -> Float }
 strokeWidth f =
     \edc ->
         { edc | strokeWidth = f }
@@ -77,14 +77,6 @@ style f =
         { edc | style = Just f }
 
 
-{-| To add fill color to Edge/Node
--}
-fill : (a -> Paint) -> Attribute { c | fill : a -> Paint }
-fill f =
-    \edc ->
-        { edc | fill = f }
-
-
 title : (a -> String) -> Attribute { c | title : a -> String }
 title f =
     \edc ->
@@ -102,6 +94,14 @@ shape : Shape -> Attribute (NodeDrawerConfig n msg)
 shape s =
     \ndc ->
         { ndc | shape = s }
+
+
+{-| To add fill color to Node
+-}
+fill : (a -> Color) -> Attribute { c | fill : a -> Color }
+fill f =
+    \ndc ->
+        { ndc | fill = f }
 
 
 {-| Set the Extra Label for a node.
@@ -156,11 +156,9 @@ alpha a =
         { edc | alpha = a }
 
 
-
--- Need to look into this, lay edge labels along the curvature
--- {-| To set the label orientation along the curvature of edge
--- -}
--- orientLabelAlongEdge : Bool -> Attribute (EdgeDrawerConfig e msg)
--- orientLabelAlongEdge b =
---     \edc ->
---         { edc | orientLabelAlongEdge = b }
+{-| To set the label orientation along the curvature of edge
+-}
+orientLabelAlongEdge : Bool -> Attribute (EdgeDrawerConfig e msg)
+orientLabelAlongEdge b =
+    \edc ->
+        { edc | orientLabelAlongEdge = b }

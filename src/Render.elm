@@ -1,6 +1,7 @@
 module Render exposing
     ( draw
     , edgeDrawer, nodeDrawer, style
+    , id
     )
 
 {-| This module provides a minimalistic general graph renderer for some use cases.
@@ -40,25 +41,12 @@ import Dagre.Attributes as DA
 import Dict
 import Graph as G exposing (Edge, Graph, Node)
 import Html exposing (Html)
-import Render.StandardDrawers as DRD exposing (..)
+import Render.StandardDrawers as RSD
 import Render.StandardDrawers.Attributes exposing (Attribute)
-import Render.Types as DRT exposing (..)
-import TypedSvg as TS exposing (g, polyline)
-import TypedSvg.Attributes as TA exposing (class, points, stroke, textAnchor, transform)
-import TypedSvg.Attributes.InPx exposing (cx, cy, r, x, y)
-import TypedSvg.Core as TC exposing (Svg)
-import TypedSvg.Types
-    exposing
-        ( AlignmentBaseline(..)
-        , AnchorAlignment(..)
-        , Cursor(..)
-        , Display(..)
-        , FontWeight(..)
-        , Length(..)
-        , MarkerCoordinateSystem(..)
-        , Paint(..)
-        , Transform(..)
-        )
+import Render.Types exposing (..)
+import TypedSvg as TS
+import TypedSvg.Attributes as TA
+import TypedSvg.Core as TC
 
 
 
@@ -69,6 +57,7 @@ type alias DrawConfig n e msg =
     { edgeDrawer : EdgeDrawer e msg
     , nodeDrawer : NodeDrawer n msg
     , style : String
+    , id : String
     }
 
 
@@ -87,8 +76,8 @@ nodeDrawing node_ drawNode_ coordDict config =
     drawNode_ (NodeAttributes node_ pos w h)
 
 
-edgeDrawing : Edge e -> EdgeDrawer e msg -> Dict.Dict G.NodeId ( Float, Float ) -> Dict.Dict ( G.NodeId, G.NodeId ) (List G.NodeId) -> TC.Svg msg
-edgeDrawing edge_ drawEdge_ coordDict controlPointsDict =
+edgeDrawing : Edge e -> EdgeDrawer e msg -> Dict.Dict G.NodeId ( Float, Float ) -> Dict.Dict ( G.NodeId, G.NodeId ) (List G.NodeId) -> DA.Config -> TC.Svg msg
+edgeDrawing edge_ drawEdge_ coordDict controlPointsDict config =
     let
         getCoords =
             \p -> Maybe.withDefault ( -10, -10 ) (Dict.get p coordDict)
@@ -101,8 +90,19 @@ edgeDrawing edge_ drawEdge_ coordDict controlPointsDict =
 
         ctrlPts =
             Maybe.withDefault [] (Dict.get ( edge_.from, edge_.to ) controlPointsDict) |> List.map getCoords
+
+        getWidth =
+            \n ->
+                Maybe.withDefault config.width (Dict.get n config.widthDict)
+
+        getHeight =
+            \n ->
+                Maybe.withDefault config.height (Dict.get n config.heightDict)
+
+        dimensions =
+            \n -> ( getWidth n, getHeight n )
     in
-    drawEdge_ (EdgeAttributes edge_ sourcePos targetPos ctrlPts)
+    drawEdge_ (EdgeAttributes edge_ sourcePos targetPos ctrlPts (dimensions edge_.from) (dimensions edge_.to))
 
 
 
@@ -111,9 +111,10 @@ edgeDrawing edge_ drawEdge_ coordDict controlPointsDict =
 
 defDrawConfig : DrawConfig n e msg
 defDrawConfig =
-    { edgeDrawer = DRD.svgDrawEdge []
-    , nodeDrawer = DRD.svgDrawNode []
+    { edgeDrawer = RSD.svgDrawEdge []
+    , nodeDrawer = RSD.svgDrawNode []
     , style = ""
+    , id = "graph-0"
     }
 
 
@@ -147,17 +148,16 @@ draw edits1 edits2 graph =
             List.foldl (\f a -> f a) defDrawConfig edits2
 
         edgesSvg =
-            g [ class [ "links" ] ] <| List.map (\e -> edgeDrawing e drawConfig.edgeDrawer coordDict controlPtsDict) <| G.edges graph
+            TS.g [ TA.class [ "links" ] ] <| List.map (\e -> edgeDrawing e drawConfig.edgeDrawer coordDict controlPtsDict dagreConfig) <| G.edges graph
 
         nodesSvg =
-            g [ class [ "nodes" ] ] <| List.map (\n -> nodeDrawing n drawConfig.nodeDrawer coordDict dagreConfig) <| G.nodes graph
+            TS.g [ TA.class [ "nodes" ] ] <| List.map (\n -> nodeDrawing n drawConfig.nodeDrawer coordDict dagreConfig) <| G.nodes graph
     in
     TS.svg
         [ TA.viewBox 0 0 width height
         , TA.style drawConfig.style
         ]
-        [ TS.defs [] [ triangleHeadElement, veeHeadElement ]
-        , g [ TA.id "graph0" ] [ edgesSvg, nodesSvg ]
+        [ TS.g [ TA.id drawConfig.id ] [ edgesSvg, nodesSvg ]
         ]
 
 
@@ -187,60 +187,9 @@ style s =
         { dc | style = s }
 
 
-
-{- Different svg elements for different heads on edges -}
-
-
-triangleHeadElement : Svg msg
-triangleHeadElement =
-    TS.marker
-        [ TA.id "triangle-head"
-        , TA.viewBox 0 0 9 6
-        , TA.markerWidth <| Px 4
-        , TA.markerHeight <| Px 4
-        , TA.refX "16"
-        , TA.refY "3"
-        , TA.orient "auto"
-        , TA.markerUnits MarkerCoordinateSystemStrokeWidth
-        ]
-        [ TS.path
-            [ TA.d "M0,0 L0,6 L9,3 z"
-            , TA.stroke ContextStroke
-            ]
-            []
-        ]
-
-
-veeHeadElement : Svg msg
-veeHeadElement =
-    TS.marker
-        [ TA.id "vee-head"
-        , TA.markerWidth <| Px 10
-        , TA.markerHeight <| Px 10
-        , TA.refX "16"
-        , TA.refY "3"
-        , TA.orient "auto"
-        , TA.markerUnits MarkerCoordinateSystemStrokeWidth
-        ]
-        [ TS.path
-            [ TA.d "M0,0 L4.5,3 L0,6 L9,3 z"
-            , TA.fill ContextFill
-            , TA.stroke ContextStroke
-            ]
-            []
-        ]
-
-
-
-{-
-   Return a record of following type
-   1.  { Dict of NodeId to Coordinates
-       , Dict of (NodeId,NodeId) List (nodeIds)
-       , height : of graph
-       , width : of graph}
-
-
-
-
-
+{-| Set id attribute for the svg graph
 -}
+id : String -> Attribute (DrawConfig n e msg)
+id s =
+    \dc ->
+        { dc | id = s }

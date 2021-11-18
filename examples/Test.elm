@@ -1,5 +1,6 @@
 module Test exposing (..)
 
+import Color
 import Dagre.Attributes as DA
 import Graph as G
 import Html
@@ -62,14 +63,17 @@ main =
         [ R.nodeDrawer
             (DRD.svgDrawNode
                 [ RSDA.xLabel (\n -> String.fromInt n.id)
+                , RSDA.shape (RSDT.RoundedBox 2)
 
                 -- , RSDA.label (\n -> String.fromInt (n.id + )
                 ]
             )
         , R.edgeDrawer
             (DRD.svgDrawEdge
-                [ RSDA.arrowHead RSDT.Triangle
-                , RSDA.strokeWidth (\_ -> TT.Px 5)
+                [ RSDA.arrowHead RSDT.None
+
+                -- , RSDA.strokeWidth (\_ -> )
+                , RSDA.orientLabelAlongEdge True
                 , RSDA.label (\e -> String.fromInt e.from ++ " to " ++ String.fromInt e.to)
                 ]
             )
