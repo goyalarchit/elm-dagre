@@ -1,8 +1,9 @@
 module Render.Internal exposing (..)
 
-{-
-   This module is a functional implementation of the method I found here
-   https://francoisromain.medium.com/smooth-a-svg-path-with-cubic-bezier-curves-e37b49d46c74
+{-| This module is a functional implementation of the method I found here
+<https://francoisromain.medium.com/smooth-a-svg-path-with-cubic-bezier-curves-e37b49d46c74>
+
+@deprecated I found a better module named "folkertdev/one-true-path-experiment" to draw splines.
 
 -}
 

@@ -1,9 +1,34 @@
 module Dagre.Attributes exposing (..)
 
+{-| Dagre Configuration Attributes
+
+
+# Types
+
+@docs RankDir, Config, Attribute
+
+
+# Attributes
+
+These function set the respective attributes for the algorithm
+
+**Note** : All attributes except rankDir can not have values < 0. If value "v" < 0
+then absolute value of "v" is used
+
+@docs rankDir, widthDict, heightDict, width, height, nodeSep, edgeSep, rankSep, marginX, marginY
+
+-}
+
 import Dict exposing (Dict)
 import Graph as G
 
 
+{-| This type represents the config for the dagre layout algorithm
+
+**Note** : For complete info on default values and description of each field, please
+see Dagre module.
+
+-}
 type alias Config =
     { rankDir : RankDir
     , widthDict : Dict G.NodeId Float
@@ -18,6 +43,8 @@ type alias Config =
     }
 
 
+{-| This type represents the rank directions.
+-}
 type RankDir
     = TB
     | BT
@@ -33,14 +60,6 @@ rankDir : RankDir -> Attribute
 rankDir rDir =
     \a ->
         { a | rankDir = rDir }
-
-
-
-{-
-   Note :
-   1. The following attributes can not have values < 0
-   2. If value "v" < 0 then absolute value of "v" is used
--}
 
 
 widthDict : Dict G.NodeId Float -> Attribute
