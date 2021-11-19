@@ -1,6 +1,5 @@
 module Simple exposing (..)
 
-import Dagre.Attributes as DA
 import Graph as G
 import Html
 import Render as R
@@ -36,12 +35,7 @@ simpleGraph =
 main : Html.Html msg
 main =
     R.draw
-        [ DA.width 32
-        , DA.height 32
-        , DA.marginX 3
-        , DA.marginY 3
-        , DA.rankSep 75
-        ]
+        []
         [ R.style "height: 100vh;"
         ]
         simpleGraph

@@ -24,13 +24,13 @@ defaultConfig =
     { rankDir = DA.TB
     , widthDict = Dict.empty
     , heightDict = Dict.empty
-    , width = 0
-    , height = 0
+    , width = 32
+    , height = 32
     , nodeSep = 50
     , edgeSep = 10
-    , rankSep = 50
-    , marginX = 0
-    , marginY = 0
+    , rankSep = 75
+    , marginX = 20
+    , marginY = 20
     }
 
 
