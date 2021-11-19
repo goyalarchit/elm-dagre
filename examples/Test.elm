@@ -64,13 +64,17 @@ main =
             (DRD.svgDrawNode
                 [ RSDA.xLabel (\n -> String.fromInt n.id)
                 , RSDA.shape (RSDT.RoundedBox 2)
+                , RSDA.onClick (\_ -> None)
 
+                -- , RSDA.xLabelPos (\_ _ _ -> ( 0, 0 ))
+                -- Add a cursor type
                 -- , RSDA.label (\n -> String.fromInt (n.id + )
                 ]
             )
         , R.edgeDrawer
             (DRD.svgDrawEdge
                 [ RSDA.arrowHead RSDT.None
+                , RSDA.onClick (\_ -> None)
 
                 -- , RSDA.strokeWidth (\_ -> )
                 , RSDA.orientLabelAlongEdge True

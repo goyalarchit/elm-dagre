@@ -15,7 +15,6 @@ default drawers for the draw function.
 
 -}
 
-import Bootstrap.Accordion exposing (config)
 import Color
 import Curve
 import Graph exposing (Node)
@@ -26,20 +25,9 @@ import Render.Types exposing (..)
 import SubPath as SP
 import TypedSvg as TS exposing (g)
 import TypedSvg.Attributes as TA
-import TypedSvg.Attributes.InPx exposing (cx, cy, r, x, y)
 import TypedSvg.Core as TC exposing (Svg)
 import TypedSvg.Events as TE
 import TypedSvg.Types as TT
-    exposing
-        ( AnchorAlignment(..)
-        , Cursor(..)
-        , Display(..)
-        , FontWeight(..)
-        , Length(..)
-        , MarkerCoordinateSystem(..)
-        , Paint(..)
-        , Transform(..)
-        )
 
 
 defEdgeDrawerConfig : EdgeDrawerConfig e msg
@@ -149,6 +137,7 @@ svgDrawEdge edits edgeAtrib =
                     , TA.class [ "edge" ]
                     , TA.style <| config.style edge
                     , TE.onClick (f edge)
+                    , TA.cursor TT.CursorPointer
                     ]
     in
     g
@@ -158,8 +147,8 @@ svgDrawEdge edits edgeAtrib =
         , TS.path
             [ TA.id edgePathId
             , TA.d <| SP.toString curve
-            , TA.stroke <| Paint <| config.strokeColor edge
-            , TA.strokeWidth <| Px <| config.strokeWidth edge
+            , TA.stroke <| TT.Paint <| config.strokeColor edge
+            , TA.strokeWidth <| TT.Px <| config.strokeWidth edge
             , TA.strokeDasharray <| config.strokeDashArray edge
             , TA.fill TT.PaintNone
             , TA.markerEnd (arrowHeadId config.arrowHead)
@@ -200,18 +189,20 @@ svgDrawNode edits nodeAtrib =
                     , TA.class [ "node" ]
                     , TA.style <| config.style node
                     , TE.onClick (f node)
+                    , TA.cursor TT.CursorPointer
                     ]
     in
     g
         gAtrib
-        [ nodeShapeDrawer config nodeAtrib
+        [ TS.title [] [ TC.text <| config.title node ]
+        , nodeShapeDrawer config nodeAtrib
         , TS.text_
-            [ TA.textAnchor AnchorMiddle
+            [ TA.textAnchor TT.AnchorMiddle
             , TA.dominantBaseline TT.DominantBaselineCentral
-            , TA.transform [ Translate posX posY ]
+            , TA.transform [ TT.Translate posX posY ]
             ]
             [ TC.text lbl ]
-        , xLabelDrawer (config.xLabel node) config.xLabelPos nodeAtrib
+        , xLabelDrawer config.xLabel config.xLabelPos nodeAtrib
         ]
 
 
@@ -290,7 +281,7 @@ edgeLabelDrawer : String -> Bool -> String -> SP.ArcLengthParameterized c -> Svg
 edgeLabelDrawer lbl orientLabelAlongEdge edgePathId curve =
     if orientLabelAlongEdge then
         TS.text_
-            [ TA.textAnchor AnchorMiddle
+            [ TA.textAnchor TT.AnchorMiddle
             , TA.dominantBaseline TT.DominantBaselineCentral
             ]
             [ TS.textPath [ TA.href ("#" ++ edgePathId), TA.startOffset "50%" ] [ TC.text lbl ] ]
@@ -322,9 +313,9 @@ edgeLabelDrawer lbl orientLabelAlongEdge edgePathId curve =
                         )
         in
         TS.text_
-            [ TA.textAnchor AnchorMiddle
+            [ TA.textAnchor TT.AnchorMiddle
             , TA.dominantBaseline TT.DominantBaselineCentral
-            , TA.transform [ Translate midX midY ]
+            , TA.transform [ TT.Translate midX midY ]
             ]
             [ TC.text lbl ]
 
@@ -347,59 +338,59 @@ nodeShapeDrawer config nodeAtrib =
     case config.shape of
         Circle ->
             TS.circle
-                [ TA.r <| Px (d / 2)
-                , TA.stroke <| Paint <| config.strokeColor nodeAtrib.node
-                , TA.strokeWidth <| Px <| config.strokeWidth nodeAtrib.node
+                [ TA.r <| TT.Px (d / 2)
+                , TA.stroke <| TT.Paint <| config.strokeColor nodeAtrib.node
+                , TA.strokeWidth <| TT.Px <| config.strokeWidth nodeAtrib.node
                 , TA.strokeDasharray <| config.strokeDashArray nodeAtrib.node
-                , TA.fill <| Paint <| config.fill nodeAtrib.node
-                , cx posX
-                , cy posY
+                , TA.fill <| TT.Paint <| config.fill nodeAtrib.node
+                , TA.cx <| TT.Px posX
+                , TA.cy <| TT.Px posY
                 ]
                 []
 
         Ellipse ->
             TS.ellipse
-                [ TA.rx <| Px (width / 2)
-                , TA.ry <| Px (height / 2)
-                , TA.stroke <| Paint <| config.strokeColor nodeAtrib.node
-                , TA.strokeWidth <| Px <| config.strokeWidth nodeAtrib.node
+                [ TA.rx <| TT.Px (width / 2)
+                , TA.ry <| TT.Px (height / 2)
+                , TA.stroke <| TT.Paint <| config.strokeColor nodeAtrib.node
+                , TA.strokeWidth <| TT.Px <| config.strokeWidth nodeAtrib.node
                 , TA.strokeDasharray <| config.strokeDashArray nodeAtrib.node
-                , TA.fill <| Paint <| config.fill nodeAtrib.node
-                , cx posX
-                , cy posY
+                , TA.fill <| TT.Paint <| config.fill nodeAtrib.node
+                , TA.cx <| TT.Px posX
+                , TA.cy <| TT.Px posY
                 ]
                 []
 
         Box ->
             TS.rect
-                [ TA.width <| Px width
-                , TA.height <| Px height
-                , TA.stroke <| Paint <| config.strokeColor nodeAtrib.node
-                , TA.strokeWidth <| Px <| config.strokeWidth nodeAtrib.node
+                [ TA.width <| TT.Px width
+                , TA.height <| TT.Px height
+                , TA.stroke <| TT.Paint <| config.strokeColor nodeAtrib.node
+                , TA.strokeWidth <| TT.Px <| config.strokeWidth nodeAtrib.node
                 , TA.strokeDasharray <| config.strokeDashArray nodeAtrib.node
-                , TA.fill <| Paint <| config.fill nodeAtrib.node
-                , TA.x <| Px (posX - width / 2)
-                , TA.y <| Px (posY - height / 2)
+                , TA.fill <| TT.Paint <| config.fill nodeAtrib.node
+                , TA.x <| TT.Px (posX - width / 2)
+                , TA.y <| TT.Px (posY - height / 2)
                 ]
                 []
 
         RoundedBox r ->
             TS.rect
-                [ TA.width <| Px width
-                , TA.height <| Px height
-                , TA.rx <| Px r
-                , TA.stroke <| Paint <| config.strokeColor nodeAtrib.node
-                , TA.strokeWidth <| Px <| config.strokeWidth nodeAtrib.node
+                [ TA.width <| TT.Px width
+                , TA.height <| TT.Px height
+                , TA.rx <| TT.Px r
+                , TA.stroke <| TT.Paint <| config.strokeColor nodeAtrib.node
+                , TA.strokeWidth <| TT.Px <| config.strokeWidth nodeAtrib.node
                 , TA.strokeDasharray <| config.strokeDashArray nodeAtrib.node
-                , TA.fill <| Paint <| config.fill nodeAtrib.node
-                , TA.x <| Px (posX - width / 2)
-                , TA.y <| Px (posY - height / 2)
+                , TA.fill <| TT.Paint <| config.fill nodeAtrib.node
+                , TA.x <| TT.Px (posX - width / 2)
+                , TA.y <| TT.Px (posY - height / 2)
                 ]
                 []
 
 
-xLabelDrawer : String -> (Node n -> Float -> Float -> ( Float, Float )) -> NodeDrawer n msg
-xLabelDrawer lbl xLabelPos nodeAtrib =
+xLabelDrawer : (Node n -> String) -> (Node n -> Float -> Float -> ( Float, Float )) -> NodeDrawer n msg
+xLabelDrawer xlbl xLabelPos nodeAtrib =
     let
         ( posX, posY ) =
             nodeAtrib.coord
@@ -411,11 +402,11 @@ xLabelDrawer lbl xLabelPos nodeAtrib =
             ( posX + xPosX, posY + xPosY )
     in
     TS.text_
-        [ TA.textAnchor AnchorMiddle
+        [ TA.textAnchor TT.AnchorMiddle
         , TA.dominantBaseline TT.DominantBaselineCentral
-        , TA.transform [ Translate xlPosX xlPosY ]
+        , TA.transform [ TT.Translate xlPosX xlPosY ]
         ]
-        [ TC.text lbl
+        [ TC.text (xlbl nodeAtrib.node)
         ]
 
 
@@ -428,12 +419,12 @@ triangleHeadElement stroke =
     TS.marker
         [ TA.id "triangle-head"
         , TA.viewBox 0 0 9 6
-        , TA.markerWidth <| Px 4.5
-        , TA.markerHeight <| Px 3
+        , TA.markerWidth <| TT.Px 4.5
+        , TA.markerHeight <| TT.Px 3
         , TA.refX "6"
         , TA.refY "3"
         , TA.orient "auto"
-        , TA.markerUnits MarkerCoordinateSystemStrokeWidth
+        , TA.markerUnits TT.MarkerCoordinateSystemStrokeWidth
         ]
         [ TS.polygon
             [ TA.points [ ( 0, 0 ), ( 0, 6 ), ( 9, 3 ) ]
@@ -449,12 +440,12 @@ veeHeadElement stroke =
     TS.marker
         [ TA.id "vee-head"
         , TA.viewBox 0 0 9 6
-        , TA.markerWidth <| Px 4.5
-        , TA.markerHeight <| Px 3
+        , TA.markerWidth <| TT.Px 4.5
+        , TA.markerHeight <| TT.Px 3
         , TA.refX "6"
         , TA.refY "3"
         , TA.orient "auto"
-        , TA.markerUnits MarkerCoordinateSystemStrokeWidth
+        , TA.markerUnits TT.MarkerCoordinateSystemStrokeWidth
         ]
         [ TS.polygon
             [ TA.points [ ( 0, 0 ), ( 4.5, 3 ), ( 0, 6 ), ( 9, 3 ) ]
