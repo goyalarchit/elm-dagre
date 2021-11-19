@@ -1,7 +1,6 @@
 module Render exposing
     ( draw
-    , edgeDrawer, nodeDrawer, style
-    , id
+    , edgeDrawer, nodeDrawer, id, style
     )
 
 {-| This module provides a minimalistic general graph renderer for some use cases.
@@ -32,7 +31,7 @@ at Render.Types .
 
 # Configuration Attributes
 
-@docs edgeDrawer, nodeDrawer, style
+@docs edgeDrawer, nodeDrawer, id, style
 
 -}
 

@@ -1,4 +1,7 @@
-module Render.StandardDrawers.Types exposing (..)
+module Render.StandardDrawers.Types exposing
+    ( ArrowHeadShape(..), LinkStyle(..)
+    , Shape(..)
+    )
 
 {-| This module provides the type used in Standard Drawers
 

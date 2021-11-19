@@ -1,6 +1,6 @@
 # elm-dagre
 
-Sugiyama Style graph drawing in pure elm. It is an elm implementation of famous js library [dagrejs](https://github.com/dagrejs/dagre).
+Sugiyama Style graph drawing in pure elm. It is an elm implementation of popular js library [dagrejs](https://github.com/dagrejs/dagre).
 
 The package exposes two modules
 
@@ -15,7 +15,7 @@ See more end-to-end example code in the `examples/` folder.
 
 ## Design Goals
 
-1. Implement pure elm based Graph layout algorithm with all configurations options that are offered by the popular javascript equivalents.
+1. Implement pure elm based graph layout algorithm with all configurations options that are offered by the popular javascript equivalents.
 2. A minimalistic rendering/drawing api for drawing graphs. The api supports
    1. Adding Onclick Events
    2. Customising the aesthetics of nodes and edges.
@@ -66,7 +66,26 @@ main =
 
 - Link to live [Ellie](https://ellie-app.com/) Demo
 
-## Usage
+## Dagre Configurations
+
+Dagre supports the following configuration options.
+
+**Note** : The table also list the default values.
+
+| S. No | Field      | Default    | Description                                                                                                     |
+| ----- | ---------- | ---------- | --------------------------------------------------------------------------------------------------------------- |
+| 1.    | rankDir    | TB         | Direction for rank nodes. Can be `TB`, `BT`, `LR`, or `RL`, where T = top, B = bottom, L = left, and R = right. |
+| 2.    | widthDict  | Dict.empty | Dict which maps node-ids to that node's width in pixels                                                         |
+| 3.    | heightDict | Dict.empty | Dict which maps node-ids to that node's height in pixels                                                        |
+| 4.    | height     | 32         | The default height of the node in pixels. Used when widthDict has no value for a node                           |
+| 5.    | width      | 32         | The default width of the node in pixels. Used when heightDict has no value for a node                           |
+| 6.    | nodeSep    | 50         | Number of pixels that separate nodes horizontally in the layout.                                                |
+| 7.    | edgeSep    | 10         | Number of pixels that separate edges horizontally in the layout.                                                |
+| 8.    | rankSep    | 75         | Number of pixels between each rank in the layout.                                                               |
+| 9.    | marginX    | 0          | Number of pixels to use as a margin around the left and right of the graph.                                     |
+| 10.   | marginY    | 0          | Number of pixels to use as a margin around the top and bottom of the graph.                                     |
+
+You can configure above values by using functions in Dagre.Attributes.
 
 ## Learning Resources
 
@@ -76,8 +95,8 @@ If you find a bug please report it using the github issues.
 
 ## Future Work
 
-1. Write Test cases using elm-test.
-2. Use elm-explorations/benchmark to benchmark the performance of both Dagre and Draw modules.
-3. Add layout support to Dagre for the following
-   1. Self loops
-   2. Parallel Edges
+- [ ] Write Test cases using elm-test.
+- [ ] Use elm-explorations/benchmark to benchmark the performance of both Dagre and Render modules.
+- [ ] Add layout support to Dagre for the following
+  - [ ] Self loops
+  - [ ] Parallel Edges

@@ -6,12 +6,12 @@ default drawers for the draw function.
 
 # Standard Drawers
 
-@docs svgEdgeDrawer, svgNodeDrawer
+@docs svgDrawEdge, svgDrawNode
 
 
 ## Standard Configurations
 
-@docs defEdgeDrawerConfig, defNodeDrawerConfig
+-- Todo
 
 -}
 
@@ -94,6 +94,8 @@ tolerance =
     1.0e-4
 
 
+{-| Standard Edge Drawer. It can be configured using Rander.StandardDrawers.Attributes
+-}
 svgDrawEdge : List (Attribute (EdgeDrawerConfig e msg)) -> EdgeDrawer e msg
 svgDrawEdge edits edgeAtrib =
     let
@@ -158,6 +160,8 @@ svgDrawEdge edits edgeAtrib =
         ]
 
 
+{-| Standard Node Drawer. It can be configured using Rander.StandardDrawers.Attributes
+-}
 svgDrawNode : List (Attribute (NodeDrawerConfig n msg)) -> NodeDrawer n msg
 svgDrawNode edits nodeAtrib =
     let

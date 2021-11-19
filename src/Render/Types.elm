@@ -1,4 +1,7 @@
-module Render.Types exposing (..)
+module Render.Types exposing
+    ( NodeAttributes, EdgeAttributes
+    , NodeDrawer, EdgeDrawer
+    )
 
 {-| This module provides the type definitions used in the Render module.
 

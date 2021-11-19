@@ -1,10 +1,20 @@
-module Render.StandardDrawers.Attributes exposing (..)
+module Render.StandardDrawers.Attributes exposing
+    ( Attribute
+    , fill, label, onClick, strokeColor, strokeWidth, strokeDashArray, style, title
+    , arrowHead, linkStyle, alpha, orientLabelAlongEdge
+    , shape, xLabel, xLabelPos
+    )
 
 {-| This module provides attributes for configuring draw, svgNodeDrawer
 and svgEdgeDrawer given in Dagre.Render.
 
 **Note** : This module uses elm-community/typed-svg, so don't confuse Svg
 as elm/svg.
+
+
+# Type
+
+@docs Attribute
 
 
 # Common Attributes
@@ -16,7 +26,7 @@ The following attributes can be used both on Node and Edge Drawers.
 
 # EdgeDrawer Attributes
 
-@docs arrowHead, linkStyle, alpha
+@docs arrowHead, linkStyle, alpha, orientLabelAlongEdge
 
 
 # NodeDrawer Attributes
@@ -31,6 +41,8 @@ import Render.StandardDrawers.ConfigTypes exposing (..)
 import Render.StandardDrawers.Types exposing (ArrowHeadShape, LinkStyle, Shape)
 
 
+{-| Attribute type for Standard Drawers
+-}
 type alias Attribute c =
     c -> c
 
@@ -51,18 +63,24 @@ onClick f =
         { edc | onClick = Just f }
 
 
+{-| To set the stroke color of a node/edge
+-}
 strokeColor : (a -> Color) -> Attribute { c | strokeColor : a -> Color }
 strokeColor f =
     \edc ->
         { edc | strokeColor = f }
 
 
+{-| To set the stroke width of a node/edge
+-}
 strokeWidth : (a -> Float) -> Attribute { c | strokeWidth : a -> Float }
 strokeWidth f =
     \edc ->
         { edc | strokeWidth = f }
 
 
+{-| To set the stroke dash array of a node/edge
+-}
 strokeDashArray : (a -> String) -> Attribute { c | strokeDashArray : Maybe (a -> String) }
 strokeDashArray f =
     \edc ->
@@ -77,6 +95,8 @@ style f =
         { edc | style = Just f }
 
 
+{-| To set the title (appears as a tooltip) of a node/edge
+-}
 title : (a -> String) -> Attribute { c | title : a -> String }
 title f =
     \edc ->
