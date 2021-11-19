@@ -5,10 +5,9 @@ import Dagre.Attributes as DA
 import Graph as G
 import Html
 import Render as R
-import Render.StandardDrawers as DRD
+import Render.StandardDrawers as RSD
 import Render.StandardDrawers.Attributes as RSDA
 import Render.StandardDrawers.Types as RSDT
-import TypedSvg.Types as TT
 
 
 
@@ -61,7 +60,7 @@ main =
         ]
         -- []
         [ R.nodeDrawer
-            (DRD.svgDrawNode
+            (RSD.svgDrawNode
                 [ RSDA.xLabel (\n -> String.fromInt n.id)
                 , RSDA.shape (RSDT.RoundedBox 2)
                 , RSDA.onClick (\_ -> None)
@@ -72,7 +71,7 @@ main =
                 ]
             )
         , R.edgeDrawer
-            (DRD.svgDrawEdge
+            (RSD.svgDrawEdge
                 [ RSDA.arrowHead RSDT.None
                 , RSDA.onClick (\_ -> None)
 
