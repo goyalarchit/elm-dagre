@@ -42,7 +42,7 @@ spline smooth src tgt controlPts =
             List.drop 1 anchorPoints
 
         bezierSegments =
-            List.map2 getCubicBezier startAPs endAPs
+            List.map2 (getCubicBezier smooth) startAPs endAPs
     in
     TA.d
         ("M"
@@ -69,29 +69,29 @@ getConsecutiveAnchorPoints ( src, controlPts, tgt ) =
     List.map3 (\c p n -> ( c, p, n )) points prevAPs nextAPs
 
 
-getCubicBezier : ( Coord, Coord, Coord ) -> ( Coord, Coord, Coord ) -> String
-getCubicBezier startAP endAP =
+getCubicBezier : Float -> ( Coord, Coord, Coord ) -> ( Coord, Coord, Coord ) -> String
+getCubicBezier smooth startAP endAP =
     let
         ( endPt, _, _ ) =
             endAP
 
         cps =
-            getControlPoint startAP False
+            getControlPoint smooth startAP False
 
         cpe =
-            getControlPoint endAP True
+            getControlPoint smooth endAP True
     in
     "C" ++ fromCoord cps ++ fromCoord cpe ++ fromCoord endPt
 
 
-getControlPoint : ( Coord, Coord, Coord ) -> Bool -> Coord
-getControlPoint ( current, prev, next ) rev =
+getControlPoint : Float -> ( Coord, Coord, Coord ) -> Bool -> Coord
+getControlPoint smooth ( current, prev, next ) rev =
     let
         ( curX, curY ) =
             current
 
         smoothing =
-            0.15
+            smooth
 
         ( len, angle ) =
             line prev next
