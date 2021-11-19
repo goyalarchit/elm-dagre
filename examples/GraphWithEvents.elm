@@ -1,7 +1,6 @@
 module GraphWithEvents exposing (..)
 
-import Browser exposing (sandbox)
-import Color
+import Browser
 import Dagre.Attributes as DA
 import Graph as G
 import Html
@@ -48,7 +47,7 @@ init =
 
 
 update : Msg -> Model -> Model
-update msg model =
+update msg _ =
     case msg of
         SelectNode v ->
             "You selected node " ++ String.fromInt v
