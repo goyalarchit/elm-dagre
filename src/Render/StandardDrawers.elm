@@ -91,7 +91,7 @@ arrowHeadId ah =
 
 tolerance : Float
 tolerance =
-    1.0e-4
+    1.0
 
 
 {-| Standard Edge Drawer. It can be configured using Rander.StandardDrawers.Attributes
