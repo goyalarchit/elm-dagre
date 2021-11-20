@@ -15,8 +15,11 @@ module Dagre.Attributes exposing
 
 These function set the respective attributes for the algorithm
 
-**Note** : All attributes except rankDir can not have values < 0. If value "v" < 0
-then absolute value of "v" is used
+**Note** :
+
+1.  All numeric attributes can not have values < 0. If a value `v` < 0
+    then absolute value of `v` is used.
+2.  All numeric values are defined in pixels.
 
 @docs rankDir, widthDict, heightDict, width, height, nodeSep, edgeSep, rankSep, marginX, marginY
 
@@ -29,7 +32,7 @@ import Graph as G
 {-| This type represents the config for the dagre layout algorithm
 
 **Note** : For complete info on default values and description of each field, please
-see Dagre module.
+see associated attributes.
 
 -}
 type alias Config =
@@ -48,7 +51,8 @@ type alias Config =
 
 {-| This type represents the rank directions.
 T,L,B,R represent Top, Left, Bottom, Right respectively.
-TB represent Top to Bottom. Similar notations for others.
+TB represent Top to Bottom direction. Similar notation is
+used for other directions.
 -}
 type RankDir
     = TB
@@ -63,7 +67,12 @@ type alias Attribute =
     Config -> Config
 
 
-{-| Sets the rank direction of layout
+{-| The rankDir defines the direction for rank nodes.
+
+The possible values can be TB, BT, LR, or RL.
+
+The default value is TB
+
 -}
 rankDir : RankDir -> Attribute
 rankDir rDir =
@@ -71,7 +80,18 @@ rankDir rDir =
         { a | rankDir = rDir }
 
 
-{-| Sets the widthDict for nodes in layout
+{-| The widthDict associates nodes with a width that will be used during the layout.
+
+    -- For example you want nodes 1,2,3 with widths 50,60,70 respectively then
+    -- you can pass the following
+    let
+        widths =
+            Dict.fromList [ ( 1, 50 ), ( 2, 60 ), ( 3, 70 ) ]
+    in
+    runLayout [ widthDict widths ] simplegraph
+
+The dafualt value is Dict.empty
+
 -}
 widthDict : Dict G.NodeId Float -> Attribute
 widthDict dict =
@@ -83,7 +103,18 @@ widthDict dict =
         { a | widthDict = absDict }
 
 
-{-| Sets the heightDict for nodes in layout
+{-| The heightDict associates nodes with a height that will be used during the layout.
+
+    -- For example you want nodes 1,2,3 with heights 30,50,40 respectively then
+    -- you can pass the following
+    let
+        heights =
+            Dict.fromList [ ( 1, 30 ), ( 2, 50 ), ( 3, 40 ) ]
+    in
+    runLayout [ heightDict heights ] simplegraph
+
+The dafualt value is Dict.empty
+
 -}
 heightDict : Dict G.NodeId Float -> Attribute
 heightDict dict =
@@ -95,7 +126,11 @@ heightDict dict =
         { a | heightDict = absDict }
 
 
-{-| Sets the default width for nodes in layout
+{-| Defines the default width that will be used during the layout.
+This value will be used when no value is available in widthDict for some node.
+
+The default value of width is 32 pixels.
+
 -}
 width : Float -> Attribute
 width w =
@@ -103,7 +138,11 @@ width w =
         { a | width = abs w }
 
 
-{-| Sets the default height for nodes in layout
+{-| Defines the default height that will be used during the layout.
+This value will be used when no value is available in heightDict for some node.
+
+The default value of height is 32 pixels.
+
 -}
 height : Float -> Attribute
 height h =
@@ -111,7 +150,10 @@ height h =
         { a | height = abs h }
 
 
-{-| Sets the node separation for layout
+{-| Defines the number of pixels that separate nodes in same rank in the layout.
+
+The default value is 50 pixel.
+
 -}
 nodeSep : Float -> Attribute
 nodeSep nSep =
@@ -119,7 +161,10 @@ nodeSep nSep =
         { a | nodeSep = abs nSep }
 
 
-{-| Sets the edge separation for layout
+{-| Defines the number of pixels that separate edges horizontally in the layout.
+
+The default value is 10 pixel.
+
 -}
 edgeSep : Float -> Attribute
 edgeSep eSep =
@@ -127,7 +172,10 @@ edgeSep eSep =
         { a | edgeSep = abs eSep }
 
 
-{-| Sets the rank separation for layout
+{-| Defines number of pixels between each rank in the layout.
+
+The default value is 75 pixel.
+
 -}
 rankSep : Float -> Attribute
 rankSep rSep =
@@ -135,7 +183,11 @@ rankSep rSep =
         { a | rankSep = abs rSep }
 
 
-{-| Sets the x margin for graph in layout
+{-| Defines the number of pixels to use as a margin around the left and right
+of the graph.
+
+The default value is 20 pixels.
+
 -}
 marginX : Float -> Attribute
 marginX mX =
@@ -143,7 +195,11 @@ marginX mX =
         { a | marginX = abs mX }
 
 
-{-| Sets the y margin for graph in layout
+{-| Defines the number of pixels to use as a margin around the top and bottom
+of the graph.
+
+The default value is 20 pixel.
+
 -}
 marginY : Float -> Attribute
 marginY mY =

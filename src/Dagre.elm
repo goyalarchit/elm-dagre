@@ -55,24 +55,7 @@ type alias GraphLayout =
 
 
 {-| This represents the default configuration of runLayout function.
-The default values are
-
-S.No| Field | Default | Description
---- | --------- | ------------- | -----------
-
-1.  | rankDir | TB | Direction for rank nodes. Can be `TB`, `BT`, `LR`, or `RL`, where T = top, B = bottom, L = left, and R = right.
-2.  | widthDict | Dict.empty | Dict which maps node-ids to that node's width in pixels
-3.  | heightDict| Dict.empty | Dict which maps node-ids to that node's height in pixels
-4.  | height | 32 | The default height of the node in pixels. Used when widthDict has no value for a node
-5.  | width | 32 | The default width of the node in pixels. Used when heightDict has no value for a node
-6.  | nodeSep | 50 | Number of pixels that separate nodes horizontally in the layout.
-7.  | edgeSep | 10 | Number of pixels that separate edges horizontally in the layout.
-8.  | rankSep | 75 | Number of pixels between each rank in the layout.
-9.  | marginX | 0 | Number of pixels to use as a margin around the left and right of the graph.
-10. | marginY | 0 | Number of pixels to use as a margin around the top and bottom of the graph.
-
-You can configure above values by using functions in Dagre.Attributes.
-
+For more details about configuring a layout please see Dagre.Attributes
 -}
 defaultConfig : DA.Config
 defaultConfig =
@@ -117,6 +100,9 @@ This function takes a list of Dagre Attributes and a graph and outputs the layou
 
     -- simpleGraph = Graph from Readme (or any graph)
     runLayout [] simpleGraph
+
+All the computed coordinates lie between (0,0) and (width,height).
+In simple terms, you can set `viewBox 0 0 width height` in the svg.
 
 -}
 runLayout : List DA.Attribute -> G.Graph n e -> GraphLayout

@@ -1,6 +1,6 @@
 # elm-dagre
 
-Sugiyama Style graph drawing in pure elm. It is an elm implementation of popular js library [dagrejs](https://github.com/dagrejs/dagre).
+Sugiyama Style graph drawing in pure elm. It is an elm implementation of popular js library [dagrejs](https://github.com/dagrejs/dagre). The package can be use to draw all kinds of graphs including trees efficiently.
 
 The package exposes two modules
 
@@ -23,7 +23,7 @@ See more end-to-end example code in the `examples/` folder.
    4. Favor symmetry and balance. This aesthetic has a secondary role in a few places in our algorithm.
 3. A minimalistic rendering/drawing api for drawing graphs. The api supports
    1. Adding Onclick Events
-   2. Customising the aesthetics of nodes and edges.
+   2. Customising the aesthetics of nodes and edges etc.
 
 ## Overview
 
@@ -70,27 +70,6 @@ main =
 ```
 
 - Link to live [Ellie](https://ellie-app.com/) Demo
-
-## Dagre Configurations
-
-Dagre supports the following configuration options.
-
-**Note** : The table also list the default values.
-
-| S. No | Field      | Default    | Description                                                                                                     |
-| ----- | ---------- | ---------- | --------------------------------------------------------------------------------------------------------------- |
-| 1.    | rankDir    | TB         | Direction for rank nodes. Can be `TB`, `BT`, `LR`, or `RL`, where T = top, B = bottom, L = left, and R = right. |
-| 2.    | widthDict  | Dict.empty | Dict which maps node-ids to that node's width in pixels                                                         |
-| 3.    | heightDict | Dict.empty | Dict which maps node-ids to that node's height in pixels                                                        |
-| 4.    | height     | 32         | The default height of the node in pixels. Used when widthDict has no value for a node                           |
-| 5.    | width      | 32         | The default width of the node in pixels. Used when heightDict has no value for a node                           |
-| 6.    | nodeSep    | 50         | Number of pixels that separate nodes horizontally in the layout.                                                |
-| 7.    | edgeSep    | 10         | Number of pixels that separate edges horizontally in the layout.                                                |
-| 8.    | rankSep    | 75         | Number of pixels between each rank in the layout.                                                               |
-| 9.    | marginX    | 0          | Number of pixels to use as a margin around the left and right of the graph.                                     |
-| 10.   | marginY    | 0          | Number of pixels to use as a margin around the top and bottom of the graph.                                     |
-
-You can configure above values by using functions in Dagre.Attributes.
 
 ## Learning Resources
 

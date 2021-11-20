@@ -6,11 +6,11 @@ module Render exposing
 {-| This module provides a minimalistic general graph renderer for some use cases.
 There are many possible ways of using the this package
 
-1.  You can diretly use existing drawers as a plug and play solution.
+1.  You can directly use existing drawers as a plug and play solution.
 2.  You can modify the existing drawers using Dagre.Rander.Attributes for
     changing some aesthetics.
 3.  If you want more control you can write your own drawers and use it with
-    draw function. For more details please view the source code for Render and Render.Internal
+    draw function. For more details please view the source code for Render and Render.StandardDrawers
 
 **Note** : This module uses elm-community/typed-svg, so don't confuse Svg as elm/svg.
 
