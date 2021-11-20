@@ -84,3 +84,7 @@ If you find a bug please report it using the github issues.
 - [ ] Add layout support to Dagre for the following
   - [ ] Self loops
   - [ ] Parallel Edges
+
+## Dagrejs Attribution
+
+This project is inspired from [dagrejs](https://github.com/dagrejs/dagre). Thanks contributors@dagrejs for your hard work. [(Original MIT License)](./LICENSE.dagrejs).
