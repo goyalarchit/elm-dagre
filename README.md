@@ -16,7 +16,12 @@ See more end-to-end example code in the `examples/` folder.
 ## Design Goals
 
 1. Implement pure elm based graph layout algorithm with all configurations options that are offered by the popular javascript equivalents.
-2. A minimalistic rendering/drawing api for drawing graphs. The api supports
+2. The dagre tries to achieve the following aesthetic principles as described in [A Technique for Drawing Directed Graphs](http://www.graphviz.org/documentation/TSE93.pdf)
+   1. Expose hierarchical structure in the graph. In particular, **aim edges in the same general direction if possible**. This aids finding directed paths and highlights source and sink nodes.
+   2. Avoid visual anomalies that do not convey information about the underlying graph. For example, **avoid edge crossings and sharp bends**.
+   3. Keep edges short. This makes it easier to find related nodes and contributes to A2.
+   4. Favor symmetry and balance. This aesthetic has a secondary role in a few places in our algorithm.
+3. A minimalistic rendering/drawing api for drawing graphs. The api supports
    1. Adding Onclick Events
    2. Customising the aesthetics of nodes and edges.
 
