@@ -9,7 +9,7 @@ The package exposes two modules
 
 In most use cases you will need to use Render. The Dagre is exposed in case you want to embed this in some other rendering library.
 
-See an [example in action on Ellie]({{YOUR LINK HERE}}).
+See an [example in action on Ellie](https://ellie-app.com/fTXMq6XgDbpa1).
 
 See more end-to-end example code in the `examples/` folder.
 
@@ -69,7 +69,7 @@ main =
         simpleGraph
 ```
 
-- Link to live [Ellie](https://ellie-app.com/) Demo
+- Link to live [Ellie](https://ellie-app.com/fTQRxcj4sdPa1) Demo
 
 ## Learning Resources
 
