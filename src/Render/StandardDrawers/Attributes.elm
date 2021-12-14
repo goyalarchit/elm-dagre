@@ -81,18 +81,18 @@ strokeWidth f =
 
 {-| To set the stroke dash array of a node/edge
 -}
-strokeDashArray : (a -> String) -> Attribute { c | strokeDashArray : Maybe (a -> String) }
+strokeDashArray : (a -> String) -> Attribute { c | strokeDashArray : a -> String }
 strokeDashArray f =
     \edc ->
-        { edc | strokeDashArray = Just f }
+        { edc | strokeDashArray = f }
 
 
 {-| To add any inline css to path element of the edge, or polygon of node.
 -}
-style : (a -> String) -> Attribute { c | style : Maybe (a -> String) }
+style : (a -> String) -> Attribute { c | style : a -> String }
 style f =
     \edc ->
-        { edc | style = Just f }
+        { edc | style = f }
 
 
 {-| To set the title (appears as a tooltip) of a node/edge

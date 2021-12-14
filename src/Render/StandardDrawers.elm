@@ -11,7 +11,31 @@ default drawers for the draw function.
 
 ## Standard Configurations
 
--- Todo
+
+### Edge Drawer
+
+1.  arrowHead = None
+2.  strokeColor = Color.darkGrey
+3.  strokeWidth = 3px
+4.  title = Edge.from → Edge.to
+5.  linkStyle = Spline
+6.  alpha = 0.5
+7.  orientLabelAlongEdge = False
+
+_Note: All missing attributes don't have any preset values_
+
+
+### NodeDrawer
+
+1.  label = Node.id
+2.  shape = Ellipse
+3.  strokeColor = Color.blue
+4.  strokeWidth = 1px
+5.  fill = #b2ebf2
+6.  title = Node.id
+    7.xLabelPos = ( (w / 2) + 1, (-h / 2) - 1 )
+
+_Note: All missing attributes don't have any preset values_
 
 -}
 

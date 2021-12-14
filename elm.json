@@ -3,7 +3,7 @@
     "name": "goyalarchit/elm-dagre",
     "summary": "Sugiyama Style graph drawing in pure elm.",
     "license": "BSD-3-Clause",
-    "version": "1.0.1",
+    "version": "2.0.0",
     "exposed-modules": [
         "Render",
         "Render.Types",
