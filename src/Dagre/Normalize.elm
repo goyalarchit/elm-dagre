@@ -21,7 +21,7 @@ import List.Extra as LE
 -}
 
 
-addDummyNodesAndSplitEdges : ( List DU.Layer, List DU.Edge ) -> ( ( List DU.Layer, List DU.Edge ), Dict DU.Edge (List G.NodeId) )
+addDummyNodesAndSplitEdges : ( List DU.Layer, List DU.Edge ) -> ( ( List DU.Layer, List DU.Edge ), Dict DU.Edge ( List G.NodeId, List G.NodeId ) )
 addDummyNodesAndSplitEdges ( rankLayers, edges ) =
     let
         initDummyId =
@@ -33,7 +33,7 @@ addDummyNodesAndSplitEdges ( rankLayers, edges ) =
                     1
 
         initControlPoints =
-            Dict.fromList <| List.map (\e -> ( e, [] )) edges
+            Dict.fromList <| List.map (\e -> ( e, ( [], [] ) )) edges
 
         ( ( newRankLayers, _ ), ( newEdges, newControlPoints ) ) =
             List.foldl
@@ -51,12 +51,12 @@ addDummyNodesAndSplitEdges ( rankLayers, edges ) =
 {-
    This function updates the whole rankLayers,Edges and Control points
    TODO : This function can have a potential bug, i.e. if both fromRank and toRank have
-   negetive rankValues. Need to Deal with that.
+   negative rankValues. Need to Deal with that.
 
 -}
 
 
-checkAndSplitMultiSpanEdge : DU.Edge -> ( ( List DU.Layer, G.NodeId ), ( List DU.Edge, Dict DU.Edge (List G.NodeId) ) ) -> ( ( List DU.Layer, G.NodeId ), ( List DU.Edge, Dict DU.Edge (List G.NodeId) ) )
+checkAndSplitMultiSpanEdge : DU.Edge -> ( ( List DU.Layer, G.NodeId ), ( List DU.Edge, Dict DU.Edge ( List G.NodeId, List G.NodeId ) ) ) -> ( ( List DU.Layer, G.NodeId ), ( List DU.Edge, Dict DU.Edge ( List G.NodeId, List G.NodeId ) ) )
 checkAndSplitMultiSpanEdge ( from, to ) ( ( rankLayers, dummyId ), ( edges, controlPoints ) ) =
     let
         fromRank =
@@ -77,7 +77,7 @@ checkAndSplitMultiSpanEdge ( from, to ) ( ( rankLayers, dummyId ), ( edges, cont
                 splitEdgeAndUpdateEdges ( from, to ) dummyNodes edges
 
             newControlPoints =
-                Dict.update ( from, to ) (Maybe.map (\_ -> dummyNodes)) controlPoints
+                Dict.update ( from, to ) (Maybe.map (addPoints dummyNodes)) controlPoints
 
             newRankLayers =
                 insertKNodesIntoKSubsequentLayers rankLayers (fromRank + 1) dummyNodes
@@ -90,7 +90,7 @@ checkAndSplitMultiSpanEdge ( from, to ) ( ( rankLayers, dummyId ), ( edges, cont
 
 
 {-
-   This function updates edges and add the splitted edges in to list.
+   This function updates edges and adds the new split edges in to list.
 -}
 
 
@@ -126,3 +126,23 @@ insertKNodesIntoKSubsequentLayers rankLayers startRank dummyNodes =
         )
         rankLayers
         dummyNodes
+
+
+{-| updater for Control Points Dict
+The key is edge, and the value is a tuple having control
+points when it is forward edge and backward edge
+-}
+addPoints : List Int -> ( List Int, List Int ) -> ( List Int, List Int )
+addPoints newDummyNodes ( forward, backward ) =
+    case ( forward, backward ) of
+        ( [], [] ) ->
+            ( newDummyNodes, [] )
+
+        ( pts, [] ) ->
+            ( pts, newDummyNodes )
+
+        ( [], pts ) ->
+            ( newDummyNodes, pts )
+
+        ( pts1, _ ) ->
+            ( pts1, newDummyNodes )

@@ -114,6 +114,9 @@ runLayout edits graph =
         ( newGraph, newAcyclicGraph, reversedEdges ) =
             DAC.run graph
 
+        ( uniDirEdges, biDirEdges, selfLoops ) =
+            DAC.classify reversedEdges (DU.getEdges graph)
+
         edges =
             DU.getEdges newGraph
 
@@ -121,7 +124,7 @@ runLayout edits graph =
             DR.assignRanks newAcyclicGraph
 
         ( ( newRankList, newEdges ), controlPoints ) =
-            DN.addDummyNodesAndSplitEdges ( rankList, edges )
+            DN.addDummyNodesAndSplitEdges ( rankList, List.append edges biDirEdges )
 
         bestRankList =
             DO.vertexOrder ( newRankList, newEdges )
@@ -130,7 +133,7 @@ runLayout edits graph =
             DP.position config newGraph ( bestRankList, newEdges )
 
         finalControlPoints =
-            DAC.undo (DU.getEdges graph) reversedEdges controlPoints
+            DAC.undo uniDirEdges biDirEdges controlPoints
     in
     { width = w
     , height = h

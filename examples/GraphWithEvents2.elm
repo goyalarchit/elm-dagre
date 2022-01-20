@@ -1,4 +1,4 @@
-module GraphWithEvents exposing (..)
+module GraphWithEvents2 exposing (..)
 
 import Browser
 import Dagre.Attributes as DA
@@ -20,21 +20,7 @@ simpleGraph =
         [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ]
         [ ( 0, 1 )
         , ( 0, 2 )
-        , ( 0, 4 )
-        , ( 0, 6 )
-        , ( 1, 3 )
-        , ( 1, 4 )
-        , ( 2, 5 )
-        , ( 2, 6 )
-        , ( 3, 7 )
-        , ( 3, 8 )
-        , ( 0, 7 )
-        , ( 0, 5 )
-        , ( 4, 0 )
-        , ( 6, 0 )
-        , ( 4, 8 )
-        , ( 6, 8 )
-        , ( 7, 8 )
+        , ( 2, 0 )
         ]
 
 
