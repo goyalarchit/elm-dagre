@@ -1,4 +1,4 @@
-module Render.StandardDrawers exposing (svgDrawEdge, svgDrawNode)
+module Render.StandardDrawers exposing (svgDrawEdge, svgDrawNode, svgDrawXLabel)
 
 {-| This module provides the standard Drawers for drawing a graph. These are
 default drawers for the draw function.
@@ -6,21 +6,24 @@ default drawers for the draw function.
 
 # Standard Drawers
 
-@docs svgDrawEdge, svgDrawNode
+@docs svgDrawEdge, svgDrawNode, svgDrawXLabel
 
 
 ## Standard Configurations
+
+_Note_: All Values are in [px](https://package.elm-lang.org/packages/elm-community/typed-svg/latest/TypedSvg-Types#px)
 
 
 ### Edge Drawer
 
 1.  arrowHead = None
-2.  strokeColor = Color.darkGrey
-3.  strokeWidth = 3px
-4.  title = Edge.from → Edge.to
-5.  linkStyle = Spline
-6.  alpha = 0.5
-7.  orientLabelAlongEdge = False
+2.  fontSize = 16
+3.  strokeColor = Color.darkGrey
+4.  strokeWidth = 3px
+5.  title = Edge.from → Edge.to
+6.  linkStyle = Spline
+7.  alpha = 0.5
+8.  orientLabelAlongEdge = False
 
 _Note: All missing attributes don't have any preset values_
 
@@ -29,13 +32,29 @@ _Note: All missing attributes don't have any preset values_
 
 1.  label = Node.id
 2.  shape = Ellipse
-3.  strokeColor = Color.blue
-4.  strokeWidth = 1px
-5.  fill = #b2ebf2
-6.  title = Node.id
-    7.xLabelPos = ( (w / 2) + 1, (-h / 2) - 1 )
+3.  fontSize = 16
+4.  strokeColor = Color.blue
+5.  strokeWidth = 1px
+6.  fill = #b2ebf2
+7.  title = Node.id
+8.  xLabels = []
 
 _Note: All missing attributes don't have any preset values_
+
+
+### xLabelDrawer
+
+1.  pos = \_ w h -> ( (w / 2) + 1, (-h / 2) - 1 )
+2.  shape = NoShape
+3.  fontSize = 8
+4.  strokeColor = \_ -> Color.blue
+5.  strokeWidth = \_ -> 1
+6.  fill = \_ -> Color.white
+
+_Note:_
+
+1.  _All missing attributes don't have any preset values._
+2.  _No shape is drawn for xLabel by default, hence no other attributes like stroke, fill are rendered._
 
 -}
 
@@ -54,6 +73,15 @@ import TypedSvg.Events as TE
 import TypedSvg.Types as TT
 
 
+type alias ShapeAttributes n =
+    { shape : Node n -> Shape
+    , strokeColor : Node n -> Color.Color
+    , strokeWidth : Node n -> Float
+    , strokeDashArray : Node n -> String
+    , fill : Node n -> Color.Color
+    }
+
+
 defEdgeDrawerConfig : EdgeDrawerConfig e msg
 defEdgeDrawerConfig =
     let
@@ -66,6 +94,7 @@ defEdgeDrawerConfig =
     { label = f_
     , arrowHead = None
     , onClick = Nothing
+    , fontSize = 16
     , strokeColor = \_ -> Color.darkGrey
     , strokeWidth = \_ -> 3
     , strokeDashArray = f_
@@ -87,16 +116,34 @@ defNodeDrawerConfig =
             \_ -> ""
     in
     { label = f
-    , shape = Ellipse
+    , shape = \_ -> Ellipse
     , onClick = Nothing
+    , fontSize = 16
     , strokeColor = \_ -> Color.blue
     , strokeWidth = \_ -> 1
     , strokeDashArray = f_
     , style = f_
     , fill = \_ -> Color.rgb255 178 235 242
     , title = f
-    , xLabel = f_
-    , xLabelPos = \_ w h -> ( (w / 2) + 1, (-h / 2) - 1 )
+    , xLabels = []
+    }
+
+
+defXLabelDrawerConfig : XLabelDrawerConfig n
+defXLabelDrawerConfig =
+    let
+        f_ =
+            \_ -> ""
+    in
+    { label = f_
+    , pos = \_ w h -> ( (w / 2) + 1, (-h / 2) - 1 )
+    , shape = \_ -> NoShape
+    , fontSize = 8
+    , strokeColor = \_ -> Color.blue
+    , strokeWidth = \_ -> 1
+    , strokeDashArray = f_
+    , fill = \_ -> Color.white
+    , title = f_
     }
 
 
@@ -180,7 +227,7 @@ svgDrawEdge edits edgeAtrib =
             , TA.markerEnd (arrowHeadId config.arrowHead)
             ]
             []
-        , edgeLabelDrawer (config.label edge) config.orientLabelAlongEdge edgePathId parameterizedCurve
+        , edgeLabelDrawer (config.label edge) config.fontSize config.orientLabelAlongEdge edgePathId parameterizedCurve
         ]
 
 
@@ -219,18 +266,74 @@ svgDrawNode edits nodeAtrib =
                     , TE.onClick (f node)
                     , TA.cursor TT.CursorPointer
                     ]
+
+        shapeAtrib =
+            { shape = config.shape
+            , strokeColor = config.strokeColor
+            , strokeWidth = config.strokeWidth
+            , strokeDashArray = config.strokeDashArray
+            , fill = config.fill
+            }
     in
     g
         gAtrib
         [ TS.title [] [ TC.text <| config.title node ]
-        , nodeShapeDrawer config nodeAtrib
-        , TS.text_
-            [ TA.textAnchor TT.AnchorMiddle
-            , TA.dominantBaseline TT.DominantBaselineCentral
-            , TA.transform [ TT.Translate posX posY ]
-            ]
-            [ TC.text lbl ]
-        , xLabelDrawer config.xLabel config.xLabelPos nodeAtrib
+        , nodeShapeDrawer shapeAtrib nodeAtrib
+        , centeredText lbl config.fontSize ( posX, posY )
+        , xLabelsDrawer config.xLabels nodeAtrib
+        ]
+
+
+{-| Standard xLabel Drawer for NodeDrawer's xLabel attribute.
+It can be configured using Rander.StandardDrawers.Attributes
+-}
+svgDrawXLabel : List (Attribute (XLabelDrawerConfig n)) -> NodeAttributes n -> Svg msg
+svgDrawXLabel edits nodeAtrib =
+    let
+        config =
+            List.foldl (\f a -> f a) defXLabelDrawerConfig edits
+
+        ( posX, posY ) =
+            nodeAtrib.coord
+
+        ( xPosX, xPosY ) =
+            config.pos nodeAtrib.node nodeAtrib.width nodeAtrib.height
+
+        ( xlPosX, xlPosY ) =
+            ( posX + xPosX, posY + xPosY )
+
+        nodeAtribX =
+            { nodeAtrib
+                | width = nodeAtrib.width / 2
+                , height = nodeAtrib.height / 2
+                , coord = ( xlPosX, xlPosY )
+            }
+
+        shapeAtrib =
+            { shape = config.shape
+            , strokeColor = config.strokeColor
+            , strokeWidth = config.strokeWidth
+            , strokeDashArray = config.strokeDashArray
+            , fill = config.fill
+            }
+    in
+    TS.g
+        [ TA.class [ "xlabel" ] ]
+        [ TS.title [] [ TC.text <| config.title nodeAtribX.node ]
+        , nodeShapeDrawer shapeAtrib nodeAtribX
+        , centeredText (config.label nodeAtribX.node) config.fontSize ( xlPosX, xlPosY )
+        ]
+
+
+centeredText : String -> Float -> ( Float, Float ) -> Svg msg
+centeredText str fontSize ( posX, posY ) =
+    TS.text_
+        [ TA.textAnchor TT.AnchorMiddle
+        , TA.dominantBaseline TT.DominantBaselineCentral
+        , TA.transform [ TT.Translate posX posY ]
+        , TA.fontSize <| TT.Px fontSize
+        ]
+        [ TC.text str
         ]
 
 
@@ -305,12 +408,13 @@ arrowHeadDef ahs stroke =
             TS.defs [] []
 
 
-edgeLabelDrawer : String -> Bool -> String -> SP.ArcLengthParameterized c -> Svg msg
-edgeLabelDrawer lbl orientLabelAlongEdge edgePathId curve =
+edgeLabelDrawer : String -> Float -> Bool -> String -> SP.ArcLengthParameterized c -> Svg msg
+edgeLabelDrawer lbl fontSize orientLabelAlongEdge edgePathId curve =
     if orientLabelAlongEdge then
         TS.text_
             [ TA.textAnchor TT.AnchorMiddle
             , TA.dominantBaseline TT.DominantBaselineCentral
+            , TA.fontSize <| TT.Px fontSize
             ]
             [ TS.textPath [ TA.href ("#" ++ edgePathId), TA.startOffset "50%" ] [ TC.text lbl ] ]
 
@@ -340,15 +444,10 @@ edgeLabelDrawer lbl orientLabelAlongEdge edgePathId curve =
                                 a
                         )
         in
-        TS.text_
-            [ TA.textAnchor TT.AnchorMiddle
-            , TA.dominantBaseline TT.DominantBaselineCentral
-            , TA.transform [ TT.Translate midX midY ]
-            ]
-            [ TC.text lbl ]
+        centeredText lbl fontSize ( midX, midY )
 
 
-nodeShapeDrawer : NodeDrawerConfig n msg -> NodeAttributes n -> Svg msg
+nodeShapeDrawer : ShapeAttributes n -> NodeAttributes n -> Svg msg
 nodeShapeDrawer config nodeAtrib =
     let
         ( posX, posY ) =
@@ -363,7 +462,7 @@ nodeShapeDrawer config nodeAtrib =
         d =
             max width height
     in
-    case config.shape of
+    case config.shape nodeAtrib.node of
         Circle ->
             TS.circle
                 [ TA.r <| TT.Px (d / 2)
@@ -416,26 +515,17 @@ nodeShapeDrawer config nodeAtrib =
                 ]
                 []
 
+        NoShape ->
+            TS.g
+                []
+                []
 
-xLabelDrawer : (Node n -> String) -> (Node n -> Float -> Float -> ( Float, Float )) -> NodeDrawer n msg
-xLabelDrawer xlbl xLabelPos nodeAtrib =
-    let
-        ( posX, posY ) =
-            nodeAtrib.coord
 
-        ( xPosX, xPosY ) =
-            xLabelPos nodeAtrib.node nodeAtrib.width nodeAtrib.height
-
-        ( xlPosX, xlPosY ) =
-            ( posX + xPosX, posY + xPosY )
-    in
-    TS.text_
-        [ TA.textAnchor TT.AnchorMiddle
-        , TA.dominantBaseline TT.DominantBaselineCentral
-        , TA.transform [ TT.Translate xlPosX xlPosY ]
-        ]
-        [ TC.text (xlbl nodeAtrib.node)
-        ]
+xLabelsDrawer : List (NodeAttributes n -> Svg msg) -> NodeAttributes n -> Svg msg
+xLabelsDrawer xLabelDrawers nodeAtrib =
+    TS.g
+        [ TA.class [ "xlabels" ] ]
+        (List.map (\f -> f nodeAtrib) xLabelDrawers)
 
 
 
