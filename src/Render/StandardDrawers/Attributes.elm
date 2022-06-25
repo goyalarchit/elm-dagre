@@ -1,8 +1,9 @@
 module Render.StandardDrawers.Attributes exposing
     ( Attribute
-    , fill, label, onClick, strokeColor, strokeWidth, strokeDashArray, style, title
+    , label, onClick, fontSize, strokeColor, strokeWidth, strokeDashArray, style, title
     , arrowHead, linkStyle, alpha, orientLabelAlongEdge
-    , shape, xLabel, xLabelPos
+    , fill, shape, xLabels
+    , pos
     )
 
 {-| This module provides attributes for configuring draw, svgNodeDrawer
@@ -17,11 +18,35 @@ as elm/svg.
 @docs Attribute
 
 
+# Attributes Table
+
+Please see the following table that maps which attributes are allowed for which drawers.
+
+    | S.No. | Attribute Name       | Node's XLabel  | Node  | Edge  |
+    |-------|----------------------|----------------|-------|-------|
+    | 1     | label                | ✅             | ✅    | ✅    |
+    | 2     | fontSize             | ✅             | ✅    | ✅    |
+    | 3     | strokeColor          | ✅             | ✅    | ✅    |
+    | 4     | strokeWidth          | ✅             | ✅    | ✅    |
+    | 5     | strokeDashArray      | ✅             | ✅    | ✅    |
+    | 6     | title                | ✅             | ✅    | ✅    |
+    | 7     | onClick              | ❌             | ✅    | ✅    |
+    | 8     | style                | ❌             | ✅    | ✅    |
+    | 9     | fill                 | ✅             | ✅    | ❌    |
+    | 10    | shape                | ✅             | ✅    | ❌    |
+    | 11    | xLabels              | ✅             | ✅    | ❌    |
+    | 12    | arrowHead            | ❌             | ❌    | ✅    |
+    | 13    | linkStyle            | ❌             | ❌    | ✅    |
+    | 14    | alpha                | ❌             | ❌    | ✅    |
+    | 15    | orientLabelAlongEdge | ❌             | ❌    | ✅    |
+    | 16    | pos                  | ✅             | ❌    | ❌    |
+
+
 # Common Attributes
 
-The following attributes can be used both on Node and Edge Drawers.
+The following attributes can be used on Node, Node's xLabels and Edge Drawers.
 
-@docs fill, label, onClick, strokeColor, strokeWidth, strokeDashArray, style, title
+@docs label, onClick, fontSize, strokeColor, strokeWidth, strokeDashArray, style, title
 
 
 # EdgeDrawer Attributes
@@ -31,7 +56,12 @@ The following attributes can be used both on Node and Edge Drawers.
 
 # NodeDrawer Attributes
 
-@docs shape, xLabel, xLabelPos
+@docs fill, shape, xLabels
+
+
+## xLabelDrawer Attributes
+
+@docs pos
 
 -}
 
@@ -39,6 +69,8 @@ import Color exposing (Color)
 import Graph exposing (Node)
 import Render.StandardDrawers.ConfigTypes exposing (..)
 import Render.StandardDrawers.Types exposing (ArrowHeadShape, LinkStyle, Shape)
+import Render.Types exposing (NodeAttributes)
+import TypedSvg.Core exposing (Svg)
 
 
 {-| Attribute type for Standard Drawers
@@ -47,7 +79,7 @@ type alias Attribute c =
     c -> c
 
 
-{-| The following attribute can be used to set label on both Nodes and Edges.
+{-| The following attribute can be used to set label on node/edge/xlabel.
 -}
 label : (a -> String) -> Attribute { c | label : a -> String }
 label f =
@@ -63,7 +95,15 @@ onClick f =
         { edc | onClick = Just f }
 
 
-{-| To set the stroke color of a node/edge
+{-| To set the font Size for label of a node/edge/xlabel
+-}
+fontSize : Float -> Attribute { c | fontSize : Float }
+fontSize f =
+    \edc ->
+        { edc | fontSize = f }
+
+
+{-| To set the stroke color of a node/edge/xlabel
 -}
 strokeColor : (a -> Color) -> Attribute { c | strokeColor : a -> Color }
 strokeColor f =
@@ -71,7 +111,7 @@ strokeColor f =
         { edc | strokeColor = f }
 
 
-{-| To set the stroke width of a node/edge
+{-| To set the stroke width of a node/edge/xlabel
 -}
 strokeWidth : (a -> Float) -> Attribute { c | strokeWidth : a -> Float }
 strokeWidth f =
@@ -79,7 +119,7 @@ strokeWidth f =
         { edc | strokeWidth = f }
 
 
-{-| To set the stroke dash array of a node/edge
+{-| To set the stroke dash array of a node/edge/xlabel
 -}
 strokeDashArray : (a -> String) -> Attribute { c | strokeDashArray : a -> String }
 strokeDashArray f =
@@ -95,7 +135,7 @@ style f =
         { edc | style = f }
 
 
-{-| To set the title (appears as a tooltip) of a node/edge
+{-| To set the title (appears as a tooltip) of a node/edge/xlabel
 -}
 title : (a -> String) -> Attribute { c | title : a -> String }
 title f =
@@ -107,16 +147,16 @@ title f =
 {- Node specific attributes -}
 
 
-{-| This attributes sets the type of arrow head used for drawing the edge.
-The possible values are None, Triangle, Vee.
+{-| This attributes sets the shape of Node used for drawing the node.
+The possible values are Circle, Ellipse, Box, RoundedBox.
 -}
-shape : Shape -> Attribute (NodeDrawerConfig n msg)
-shape s =
+shape : (Node n -> Shape) -> Attribute { c | shape : Node n -> Shape }
+shape f =
     \ndc ->
-        { ndc | shape = s }
+        { ndc | shape = f }
 
 
-{-| To add fill color to Node
+{-| To add fill colour to Node and xLabel of node
 -}
 fill : (a -> Color) -> Attribute { c | fill : a -> Color }
 fill f =
@@ -124,28 +164,28 @@ fill f =
         { ndc | fill = f }
 
 
-{-| Set the Extra Label for a node.
+{-| Set the Extra Labels for a node.
 -}
-xLabel : (Node n -> String) -> Attribute (NodeDrawerConfig n msg)
-xLabel f =
+xLabels : List (NodeAttributes n -> Svg msg) -> Attribute (NodeDrawerConfig n msg)
+xLabels f =
     \ndc ->
-        { ndc | xLabel = f }
+        { ndc | xLabels = f }
 
 
 {-| Used to set the position of Extra Label relative to the node.
 -}
-xLabelPos : (Node n -> Float -> Float -> ( Float, Float )) -> Attribute (NodeDrawerConfig n msg)
-xLabelPos f =
+pos : (Node n -> Float -> Float -> ( Float, Float )) -> Attribute (XLabelDrawerConfig n)
+pos f =
     \ndc ->
-        { ndc | xLabelPos = f }
+        { ndc | pos = f }
 
 
 
 {- Edge specific attributes -}
 
 
-{-| This attributes sets the shape of Node used for drawing the node.
-The possible values are Circle, Ellipse, Box, RoundedBox.
+{-| This attributes sets the type of arrow head used for drawing the edge.
+The possible values are None, Triangle, Vee.
 -}
 arrowHead : ArrowHeadShape -> Attribute (EdgeDrawerConfig e msg)
 arrowHead ah =

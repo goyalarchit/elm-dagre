@@ -37,7 +37,8 @@ type LinkStyle
 _Note_ : RoundedBox takes radius of curvature in px as parameter
 -}
 type Shape
-    = Circle
+    = NoShape
+    | Circle
     | Ellipse
     | Box
     | RoundedBox Float
