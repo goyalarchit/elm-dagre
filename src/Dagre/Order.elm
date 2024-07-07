@@ -1,5 +1,6 @@
 module Dagre.Order exposing (vertexOrder)
 
+import Dagre.Layer as DL
 import Dagre.Order.Barycenter as DOB
 import Dagre.Order.CrossCount as DOC
 import Dagre.Order.Init as DOI
@@ -14,12 +15,12 @@ import Dagre.Utils as DU
    This algorithm is taken from Gansner, et al., (1993) : "A Technique for Drawing Directed Graphs."
    For debugging and reference visit DagreJS implementation (commit with SHA-id '6355259')
    TODO : implement the  Jünger and Mutzel,
-        "2-DU.Layer Straightline Crossing Minimization", It improves time complexity
+        "2-DL.Layer Straightline Crossing Minimization", It improves time complexity
 
 -}
 
 
-vertexOrder : ( List DU.Layer, List DU.Edge ) -> List DU.Layer
+vertexOrder : ( List DL.Layer, List DU.Edge ) -> List DL.Layer
 vertexOrder ( layering, edges ) =
     let
         initLayering =
@@ -37,7 +38,7 @@ vertexOrder ( layering, edges ) =
 -}
 
 
-optimizeOrdering : ( List DU.Layer, List DU.Edge ) -> Int -> ( Int, Int ) -> List DU.Layer
+optimizeOrdering : ( List DL.Layer, List DU.Edge ) -> Int -> ( Int, Int ) -> List DL.Layer
 optimizeOrdering ( layering, edges ) bestCC ( iter, lastBest ) =
     if lastBest < 3 then
         let
@@ -66,7 +67,7 @@ optimizeOrdering ( layering, edges ) bestCC ( iter, lastBest ) =
 -}
 
 
-sweepLayers : ( List DU.Layer, List DU.Edge ) -> Int -> List DU.Layer
+sweepLayers : ( List DL.Layer, List DU.Edge ) -> Int -> List DL.Layer
 sweepLayers ( layering, edges ) iter =
     let
         maxRank =

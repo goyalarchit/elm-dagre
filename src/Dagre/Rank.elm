@@ -1,6 +1,6 @@
 module Dagre.Rank exposing (assignRanks)
 
-import Dagre.Utils as DU
+import Dagre.Layer as DL
 import Graph as G
 
 
@@ -16,7 +16,7 @@ import Graph as G
 -}
 
 
-assignRanks : G.AcyclicGraph n e -> List DU.Layer
+assignRanks : G.AcyclicGraph n e -> List DL.Layer
 assignRanks g =
     G.heightLevels g
-        |> List.map (\r -> List.map (\node -> node.node.id) r)
+        |> List.map (\r -> DL.fromList (List.map (\node -> node.node.id) r))

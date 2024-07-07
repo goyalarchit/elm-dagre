@@ -1,5 +1,6 @@
-module Dagre.Utils exposing (..)
+module Dagre.Utils exposing (Coordinates, Edge, EdgeType(..), EdgeWithType, NeighbourFn, alongIncomingEdges, alongOutgoingEdges, filterEdgesByType, getAdjacentLayerPairs, getEdgeType, getEdges, getEdgesDirectedFromLayers, getEdgesFromPath, getEdgesWithTypeDirectedFromLayers, getInEdges, getLayer, getNodeFromOrder, getOrder, getRank, infinity, intMax, intMin, isDummyNode, mapEdgeOrderToNode, mapEdgeToOrder, mapEdgeWithTypeToNodes, mapEdgeWithTypeToOrder, markEdgeWithEdgeType, markEdgesWithEdgeType)
 
+import Dagre.Layer as DL
 import Graph as G
 import List.Extra as LE
 
@@ -25,10 +26,6 @@ type alias Coordinates =
 
 type alias Edge =
     ( G.NodeId, G.NodeId )
-
-
-type alias Layer =
-    List G.NodeId
 
 
 type EdgeType
@@ -70,9 +67,9 @@ getInEdges nodeId edges =
     List.filter (\e -> (Tuple.first e |> Tuple.second) == nodeId) edges
 
 
-getRank : G.NodeId -> List Layer -> Int
+getRank : G.NodeId -> List DL.Layer -> Int
 getRank nodeId layers =
-    case LE.findIndex (List.member nodeId) layers of
+    case LE.findIndex (\layer -> DL.member nodeId layer) layers of
         Just x ->
             x
 
@@ -99,9 +96,9 @@ getEdgesFromPath path =
 -}
 
 
-getOrder : Layer -> G.NodeId -> Int
+getOrder : DL.Layer -> G.NodeId -> Int
 getOrder l nodeId =
-    case LE.elemIndex nodeId l of
+    case DL.toOrder nodeId l of
         Just idx ->
             idx
 
@@ -109,47 +106,47 @@ getOrder l nodeId =
             -1
 
 
-mapEdgeToOrder : ( Layer, Layer ) -> Edge -> Edge
+mapEdgeToOrder : ( DL.Layer, DL.Layer ) -> Edge -> Edge
 mapEdgeToOrder ( l1, l2 ) e =
     Tuple.mapBoth (getOrder l1) (getOrder l2) e
 
 
-mapEdgeWithTypeToOrder : ( Layer, Layer ) -> EdgeWithType -> EdgeWithType
+mapEdgeWithTypeToOrder : ( DL.Layer, DL.Layer ) -> EdgeWithType -> EdgeWithType
 mapEdgeWithTypeToOrder ( l1, l2 ) e =
     Tuple.mapFirst (mapEdgeToOrder ( l1, l2 )) e
 
 
-getNodeFromOrder : Layer -> Int -> G.NodeId
+getNodeFromOrder : DL.Layer -> Int -> G.NodeId
 getNodeFromOrder l order =
-    case LE.getAt order l of
-        Just n ->
-            n
+    case DL.toId order l of
+        Just id ->
+            id
 
         Nothing ->
             intMin
 
 
-mapEdgeOrderToNode : ( Layer, Layer ) -> Edge -> Edge
+mapEdgeOrderToNode : ( DL.Layer, DL.Layer ) -> Edge -> Edge
 mapEdgeOrderToNode ( l1, l2 ) e =
     Tuple.mapBoth (getNodeFromOrder l1) (getNodeFromOrder l2) e
 
 
-mapEdgeWithTypeToNodes : ( Layer, Layer ) -> EdgeWithType -> EdgeWithType
+mapEdgeWithTypeToNodes : ( DL.Layer, DL.Layer ) -> EdgeWithType -> EdgeWithType
 mapEdgeWithTypeToNodes ( l1, l2 ) e =
     Tuple.mapFirst (mapEdgeOrderToNode ( l1, l2 )) e
 
 
-getEdgesDirectedFromLayers : ( Layer, Layer ) -> List Edge -> List Edge
+getEdgesDirectedFromLayers : ( DL.Layer, DL.Layer ) -> List Edge -> List Edge
 getEdgesDirectedFromLayers ( l1, l2 ) edges =
-    List.filter (\( from, to ) -> List.member from l1 && List.member to l2) edges
+    List.filter (\( from, to ) -> DL.member from l1 && DL.member to l2) edges
 
 
-getEdgesWithTypeDirectedFromLayers : ( Layer, Layer ) -> List EdgeWithType -> List EdgeWithType
+getEdgesWithTypeDirectedFromLayers : ( DL.Layer, DL.Layer ) -> List EdgeWithType -> List EdgeWithType
 getEdgesWithTypeDirectedFromLayers ( l1, l2 ) edges =
-    List.filter (\( ( from, to ), _ ) -> List.member from l1 && List.member to l2) edges
+    List.filter (\( ( from, to ), _ ) -> DL.member from l1 && DL.member to l2) edges
 
 
-getAdjacentLayerPairs : List Layer -> List ( Layer, Layer )
+getAdjacentLayerPairs : List DL.Layer -> List ( DL.Layer, DL.Layer )
 getAdjacentLayerPairs rankList =
     let
         fromLayers =
@@ -161,13 +158,13 @@ getAdjacentLayerPairs rankList =
     List.map2 (\l1 l2 -> ( l1, l2 )) fromLayers toLayers
 
 
-getLayer : Int -> List Layer -> Layer
+getLayer : Int -> List DL.Layer -> DL.Layer
 getLayer rank layering =
     let
         layer =
             LE.getAt rank layering
     in
-    Maybe.withDefault [] layer
+    Maybe.withDefault DL.empty layer
 
 
 isDummyNode : G.NodeId -> G.NodeId -> Bool

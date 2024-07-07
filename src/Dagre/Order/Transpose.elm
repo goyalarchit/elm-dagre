@@ -1,5 +1,6 @@
 module Dagre.Order.Transpose exposing (transpose)
 
+import Dagre.Layer as DL
 import Dagre.Order.CrossCount as DOC
 import Dagre.Utils as DU
 import List.Extra as LE
@@ -15,7 +16,7 @@ import List.Extra as LE
 -}
 
 
-transpose : List DU.Edge -> List DU.Layer -> List DU.Layer
+transpose : List DU.Edge -> List DL.Layer -> List DL.Layer
 transpose edges layering =
     let
         ( newLayering, improved ) =
@@ -28,7 +29,7 @@ transpose edges layering =
         layering
 
 
-optimizeViaTranspose : List DU.Edge -> List DU.Layer -> ( List DU.Layer, Bool )
+optimizeViaTranspose : List DU.Edge -> List DL.Layer -> ( List DL.Layer, Bool )
 optimizeViaTranspose edges layering =
     let
         maxRank =
@@ -50,7 +51,7 @@ optimizeViaTranspose edges layering =
 -}
 
 
-optimizeLayer : List DU.Edge -> Int -> ( List DU.Layer, Bool ) -> ( List DU.Layer, Bool )
+optimizeLayer : List DU.Edge -> Int -> ( List DL.Layer, Bool ) -> ( List DL.Layer, Bool )
 optimizeLayer edges rank ( layering, improved ) =
     let
         prevLayer =
@@ -63,7 +64,7 @@ optimizeLayer edges rank ( layering, improved ) =
             DU.getLayer (rank + 1) layering
 
         positions =
-            List.range 0 (List.length curLayer - 2)
+            List.range 0 (DL.length curLayer - 2)
 
         ( newCurLayer, newImproved ) =
             List.foldl (optimizeNodePosition edges ( prevLayer, nextLayer )) ( curLayer, improved ) positions
@@ -78,11 +79,11 @@ optimizeLayer edges rank ( layering, improved ) =
 -}
 
 
-optimizeNodePosition : List DU.Edge -> ( DU.Layer, DU.Layer ) -> Int -> ( DU.Layer, Bool ) -> ( DU.Layer, Bool )
+optimizeNodePosition : List DU.Edge -> ( DL.Layer, DL.Layer ) -> Int -> ( DL.Layer, Bool ) -> ( DL.Layer, Bool )
 optimizeNodePosition edges ( prevLayer, nextLayer ) i ( curLayer, improved ) =
     let
         newCurLayer =
-            LE.swapAt i (i + 1) curLayer
+            DL.swapAt i (i + 1) curLayer
 
         oldLayers =
             [ prevLayer, curLayer, nextLayer ]

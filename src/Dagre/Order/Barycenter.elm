@@ -1,5 +1,6 @@
 module Dagre.Order.Barycenter exposing (FixedLayer(..), barycenter)
 
+import Dagre.Layer as DL
 import Dagre.Utils as DU
 import Graph as G
 import List.Extra as LE
@@ -24,7 +25,7 @@ type FixedLayer
 {-
    This is baryCenter function, which uses barycenter heuristic to minimize crossings
    note : Neighbour Fun give either incoming or outgoing edge neighbor
-   baryCenter :  List DU.Edge -> Neighbour Fun -> Int -> List DU.Layer -> List DU.Layer
+   baryCenter :  List DU.Edge -> Neighbour Fun -> Int -> List DL.Layer -> List DL.Layer
    baryCenter edges neighbourFn rank layering =
     -- calculate Barycenter for all nodes of layering[rank] as List (G.NodeId,Barycenter Value)
     -- sort the List "(G.NodeId,Barycenter Value)" using second value and map to "List G.NodeId"
@@ -34,7 +35,7 @@ type FixedLayer
 -}
 
 
-barycenter : List DU.Edge -> FixedLayer -> Int -> List DU.Layer -> List DU.Layer
+barycenter : List DU.Edge -> FixedLayer -> Int -> List DL.Layer -> List DL.Layer
 barycenter edges fixedLayer movableLayerRank layering =
     let
         movableLayer =
@@ -48,11 +49,9 @@ barycenter edges fixedLayer movableLayerRank layering =
                 NextLayer ->
                     ( DU.alongOutgoingEdges edges, DU.getLayer (movableLayerRank + 1) layering )
 
-        baryCenterValues =
-            List.map (\n -> ( n, calcBarycenter n neighbourFn adjLayer )) movableLayer
-
         newOrder =
-            List.sortBy Tuple.second baryCenterValues |> List.map Tuple.first
+            movableLayer
+                |> DL.sortBy (\n -> calcBarycenter n neighbourFn adjLayer)
     in
     LE.setAt movableLayerRank newOrder layering
 
@@ -72,7 +71,7 @@ barycenter edges fixedLayer movableLayerRank layering =
 -}
 
 
-calcBarycenter : G.NodeId -> DU.NeighbourFn -> DU.Layer -> Float
+calcBarycenter : G.NodeId -> DU.NeighbourFn -> DL.Layer -> Float
 calcBarycenter nodeId neighbourFn adjLayer =
     let
         adj_nodes =

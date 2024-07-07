@@ -1,5 +1,6 @@
 module Dagre.Order.CrossCount exposing (crossCount)
 
+import Dagre.Layer as DL
 import Dagre.Utils as DU
 import List.Extra as LE
 
@@ -35,7 +36,7 @@ lexSortEdge ( f1, t1 ) ( f2, t2 ) =
 -}
 
 
-mapAndSortEdges : ( DU.Layer, DU.Layer ) -> List DU.Edge -> List Int
+mapAndSortEdges : ( DL.Layer, DL.Layer ) -> List DU.Edge -> List Int
 mapAndSortEdges ( l1, l2 ) edges =
     let
         mappedEdges =
@@ -100,7 +101,7 @@ insertionSortWithInversionAccumulator nodes =
 -}
 
 
-biLayerCrossCount : List DU.Edge -> ( DU.Layer, DU.Layer ) -> Int
+biLayerCrossCount : List DU.Edge -> ( DL.Layer, DL.Layer ) -> Int
 biLayerCrossCount edges ( l1, l2 ) =
     let
         reqEdges =
@@ -119,7 +120,7 @@ biLayerCrossCount edges ( l1, l2 ) =
 {- counts Crossing edges for a rank list -}
 
 
-crossCount : ( List DU.Layer, List DU.Edge ) -> Int
+crossCount : ( List DL.Layer, List DU.Edge ) -> Int
 crossCount ( rankList, edges ) =
     let
         fromLayers =

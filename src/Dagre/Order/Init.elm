@@ -1,6 +1,6 @@
 module Dagre.Order.Init exposing (initOrder)
 
-import Dagre.Utils as DU
+import Dagre.Layer as DL
 import List
 
 
@@ -10,6 +10,10 @@ import List
 -}
 
 
-initOrder : List DU.Layer -> List DU.Layer
+initOrder : List DL.Layer -> List DL.Layer
 initOrder layering =
-    List.map List.sort layering
+    List.map
+        (\layer ->
+            DL.sortBy identity layer
+        )
+        layering

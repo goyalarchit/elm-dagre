@@ -1,6 +1,7 @@
 module Dagre.Position.BK exposing (NodePointDict, positionX, width)
 
 import Dagre.Attributes as DA
+import Dagre.Layer as DL
 import Dagre.Utils as DU
 import Dict exposing (Dict)
 import Graph as G
@@ -54,7 +55,7 @@ type HorizDir
 -}
 
 
-positionX : DA.Config -> G.Graph n e -> ( List DU.Layer, List DU.Edge ) -> NodePointDict
+positionX : DA.Config -> G.Graph n e -> ( List DL.Layer, List DU.Edge ) -> NodePointDict
 positionX config g ( rankList, edges ) =
     let
         edgesWithType =
@@ -92,7 +93,7 @@ positionX config g ( rankList, edges ) =
 -}
 
 
-preprocessing : ( List DU.Layer, List DU.EdgeWithType ) -> ( List DU.Edge, List DU.Edge )
+preprocessing : ( List DL.Layer, List DU.EdgeWithType ) -> ( List DU.Edge, List DU.Edge )
 preprocessing ( rankList, edges ) =
     let
         allType1Conflicts =
@@ -109,7 +110,7 @@ preprocessing ( rankList, edges ) =
 -}
 
 
-positionXHelper : DA.Config -> G.Graph n e -> ( List DU.Layer, List DU.Edge ) -> List DU.Edge -> ( VertDir, HorizDir ) -> NodePointDict
+positionXHelper : DA.Config -> G.Graph n e -> ( List DL.Layer, List DU.Edge ) -> List DU.Edge -> ( VertDir, HorizDir ) -> NodePointDict
 positionXHelper config g ( rankList, edges ) conflicts ( vDir, hDir ) =
     let
         ( intAdjustedRankList, neighbourFn ) =
@@ -126,7 +127,7 @@ positionXHelper config g ( rankList, edges ) conflicts ( vDir, hDir ) =
                     intAdjustedRankList
 
                 Right ->
-                    List.map List.reverse intAdjustedRankList
+                    List.map DL.reverse intAdjustedRankList
 
         ( root, align ) =
             verticalAlignment finalAdjustedRankList conflicts neighbourFn
@@ -151,14 +152,14 @@ positionXHelper config g ( rankList, edges ) conflicts ( vDir, hDir ) =
 -}
 
 
-verticalAlignment : List DU.Layer -> List DU.Edge -> DU.NeighbourFn -> ( NodeDict, NodeDict )
+verticalAlignment : List DL.Layer -> List DU.Edge -> DU.NeighbourFn -> ( NodeDict, NodeDict )
 verticalAlignment rankList conflicts neighbourFn =
     let
         root =
-            Dict.fromList <| List.map (\n -> ( n, n )) (List.concat rankList)
+            Dict.fromList <| List.map (\n -> ( n, n )) (List.concatMap DL.toList rankList)
 
         align =
-            Dict.fromList <| List.map (\n -> ( n, n )) (List.concat rankList)
+            Dict.fromList <| List.map (\n -> ( n, n )) (List.concatMap DL.toList rankList)
 
         pos =
             getPosDict rankList
@@ -176,17 +177,17 @@ verticalAlignment rankList conflicts neighbourFn =
 -}
 
 
-horizontalCompaction : ( DA.Config, G.Graph n e ) -> List DU.Layer -> NodeDict -> NodeDict -> NodePointDict
+horizontalCompaction : ( DA.Config, G.Graph n e ) -> List DL.Layer -> NodeDict -> NodeDict -> NodePointDict
 horizontalCompaction ( config, g ) rankList root align =
     let
         sepFn =
             sep config g
 
         sink =
-            Dict.fromList <| List.map (\n -> ( n, n )) (List.concat rankList)
+            Dict.fromList <| List.map (\n -> ( n, n )) (List.concatMap DL.toList rankList)
 
         shift =
-            Dict.fromList <| List.map (\n -> ( n, DU.infinity )) (List.concat rankList)
+            Dict.fromList <| List.map (\n -> ( n, DU.infinity )) (List.concatMap DL.toList rankList)
 
         pred =
             getPredDict rankList
@@ -198,7 +199,7 @@ horizontalCompaction ( config, g ) rankList root align =
             Dict.empty
 
         roots =
-            List.filter (\v -> Just v == Dict.get v root) (List.concat rankList)
+            List.filter (\v -> Just v == Dict.get v root) (List.concatMap DL.toList rankList)
 
         ( updSink, updXs ) =
             List.foldl (placeBlock pred sepFn root align) ( sink, xs ) roots
@@ -207,7 +208,7 @@ horizontalCompaction ( config, g ) rankList root align =
             List.foldl (\l s -> classOffsets sepFn pred succ root align updSink updXs l s) shift rankList
 
         finXs =
-            List.foldl (\l xs_ -> List.foldl (assignAbsoluteX updShift updSink) xs_ l) updXs rankList
+            List.foldl (\l xs_ -> List.foldl (assignAbsoluteX updShift updSink) xs_ (DL.toList l)) updXs rankList
     in
     finXs
 
@@ -415,7 +416,7 @@ balance xss =
 -}
 
 
-findType1Conflicts : ( List DU.Layer, List DU.EdgeWithType ) -> List DU.Edge
+findType1Conflicts : ( List DL.Layer, List DU.EdgeWithType ) -> List DU.Edge
 findType1Conflicts ( rankList, edges ) =
     let
         adjacentLayers =
@@ -434,7 +435,7 @@ findType1Conflicts ( rankList, edges ) =
 -}
 
 
-type1VisitLayer : List DU.EdgeWithType -> ( DU.Layer, DU.Layer ) -> List DU.Edge
+type1VisitLayer : List DU.EdgeWithType -> ( DL.Layer, DL.Layer ) -> List DU.Edge
 type1VisitLayer edges ( l1, l2 ) =
     let
         reqEdges =
@@ -442,10 +443,10 @@ type1VisitLayer edges ( l1, l2 ) =
                 |> List.map (DU.mapEdgeWithTypeToOrder ( l1, l2 ))
 
         prevLayerLength =
-            List.length l1
+            DL.length l1
 
         layerLength =
-            List.length l2
+            DL.length l2
 
         rawType1Conflicts =
             List.foldl (findInnerSegmentAndMarkConflicts ( prevLayerLength, layerLength ) reqEdges) ( ( 0, 0 ), [] ) (List.range 0 (layerLength - 1))
@@ -538,14 +539,11 @@ checkType1Conflict ( k0, k1 ) k =
 -}
 
 
-getPosDict : List DU.Layer -> Dict G.NodeId Int
+getPosDict : List DL.Layer -> Dict G.NodeId Int
 getPosDict rankList =
-    let
-        dictList =
-            List.map (\l -> List.map (\n -> ( n, DU.getOrder l n )) l) rankList
-                |> List.concat
-    in
-    Dict.fromList dictList
+    rankList
+        |> List.map DL.orderDict
+        |> List.foldl Dict.union Dict.empty
 
 
 getPos : Dict G.NodeId Int -> G.NodeId -> Int
@@ -628,11 +626,11 @@ alignVertex pos conflicts neighbourFn v ( ( root, align ), prevIdx ) =
     updatedValues
 
 
-verticalAlignmentVisitLayer : Dict G.NodeId Int -> List DU.Edge -> DU.NeighbourFn -> DU.Layer -> ( NodeDict, NodeDict ) -> ( NodeDict, NodeDict )
+verticalAlignmentVisitLayer : Dict G.NodeId Int -> List DU.Edge -> DU.NeighbourFn -> DL.Layer -> ( NodeDict, NodeDict ) -> ( NodeDict, NodeDict )
 verticalAlignmentVisitLayer pos conflicts neighbourFn layer ( root, align ) =
     let
         ( ( finalRoot, finalAlign ), _ ) =
-            List.foldl (alignVertex pos conflicts neighbourFn) ( ( root, align ), -1 ) layer
+            List.foldl (alignVertex pos conflicts neighbourFn) ( ( root, align ), -1 ) (DL.toList layer)
     in
     ( finalRoot, finalAlign )
 
@@ -643,14 +641,17 @@ verticalAlignmentVisitLayer pos conflicts neighbourFn layer ( root, align ) =
 -}
 
 
-getPredDictHelper : DU.Layer -> NodeDict -> NodeDict
+getPredDictHelper : DL.Layer -> NodeDict -> NodeDict
 getPredDictHelper layer pred =
     let
+        layerList =
+            DL.toList layer
+
         predecessors =
-            List.take (List.length layer - 1) layer
+            List.take (DL.length layer - 1) layerList
 
         nodes =
-            List.drop 1 layer
+            List.drop 1 layerList
 
         nodesWithPreds =
             List.map2 Tuple.pair nodes predecessors
@@ -661,7 +662,7 @@ getPredDictHelper layer pred =
     finalDict
 
 
-getPredDict : List DU.Layer -> NodeDict
+getPredDict : List DL.Layer -> NodeDict
 getPredDict rankList =
     let
         initDict =
@@ -673,14 +674,17 @@ getPredDict rankList =
     pred
 
 
-getSuccessorDictHelper : DU.Layer -> NodeDict -> NodeDict
+getSuccessorDictHelper : DL.Layer -> NodeDict -> NodeDict
 getSuccessorDictHelper layer succ =
     let
+        layerList =
+            DL.toList layer
+
         successors =
-            List.drop 1 layer
+            List.drop 1 layerList
 
         nodes =
-            List.take (List.length layer - 1) layer
+            List.take (DL.length layer - 1) layerList
 
         nodesWithSuccs =
             List.map2 Tuple.pair nodes successors
@@ -691,7 +695,7 @@ getSuccessorDictHelper layer succ =
     finalDict
 
 
-getSuccessorDict : List DU.Layer -> NodeDict
+getSuccessorDict : List DL.Layer -> NodeDict
 getSuccessorDict rankList =
     let
         initDict =
@@ -713,9 +717,9 @@ getNodeFromDict node dict =
             node
 
 
-classOffsets : (G.NodeId -> G.NodeId -> Float) -> NodeDict -> NodeDict -> NodeDict -> NodeDict -> NodeDict -> NodePointDict -> DU.Layer -> NodePointDict -> NodePointDict
+classOffsets : (G.NodeId -> G.NodeId -> Float) -> NodeDict -> NodeDict -> NodeDict -> NodeDict -> NodeDict -> NodePointDict -> DL.Layer -> NodePointDict -> NodePointDict
 classOffsets sepFn pred succ root align sink xs layer shift =
-    case List.head layer of
+    case DL.toId 0 layer of
         Just v ->
             case Dict.get v sink of
                 Nothing ->

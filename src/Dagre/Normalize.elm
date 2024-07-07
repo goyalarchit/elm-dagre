@@ -1,5 +1,6 @@
 module Dagre.Normalize exposing (addDummyNodesAndSplitEdges)
 
+import Dagre.Layer as DL
 import Dagre.Utils as DU
 import Dict exposing (Dict)
 import Graph as G
@@ -21,7 +22,7 @@ import List.Extra as LE
 -}
 
 
-addDummyNodesAndSplitEdges : Maybe G.NodeId -> ( List DU.Layer, List DU.Edge ) -> ( ( List DU.Layer, List DU.Edge ), Dict DU.Edge (List G.NodeId) )
+addDummyNodesAndSplitEdges : Maybe G.NodeId -> ( List DL.Layer, List DU.Edge ) -> ( ( List DL.Layer, List DU.Edge ), Dict DU.Edge (List G.NodeId) )
 addDummyNodesAndSplitEdges maybeInitDummyNodeId ( rankLayers, edges ) =
     let
         initDummyId =
@@ -30,12 +31,11 @@ addDummyNodesAndSplitEdges maybeInitDummyNodeId ( rankLayers, edges ) =
                     x
 
                 Nothing ->
-                    case List.concat rankLayers |> List.maximum of
-                        Just x ->
-                            x + 1
-
-                        Nothing ->
-                            1
+                    rankLayers
+                        |> List.concatMap DL.toList
+                        |> List.maximum
+                        |> Maybe.withDefault 0
+                        |> (+) 1
 
         initControlPoints =
             Dict.fromList <| List.map (\e -> ( e, [] )) edges
@@ -61,7 +61,7 @@ addDummyNodesAndSplitEdges maybeInitDummyNodeId ( rankLayers, edges ) =
 -}
 
 
-checkAndSplitMultiSpanEdge : DU.Edge -> ( ( List DU.Layer, G.NodeId ), ( List DU.Edge, Dict DU.Edge (List G.NodeId) ) ) -> ( ( List DU.Layer, G.NodeId ), ( List DU.Edge, Dict DU.Edge (List G.NodeId) ) )
+checkAndSplitMultiSpanEdge : DU.Edge -> ( ( List DL.Layer, G.NodeId ), ( List DU.Edge, Dict DU.Edge (List G.NodeId) ) ) -> ( ( List DL.Layer, G.NodeId ), ( List DU.Edge, Dict DU.Edge (List G.NodeId) ) )
 checkAndSplitMultiSpanEdge ( from, to ) ( ( rankLayers, dummyId ), ( edges, controlPoints ) ) =
     let
         fromRank =
@@ -123,11 +123,15 @@ splitEdgeAndUpdateEdges ( from, to ) dummyNodes edges =
 -}
 
 
-insertKNodesIntoKSubsequentLayers : List DU.Layer -> Int -> List G.NodeId -> List DU.Layer
+insertKNodesIntoKSubsequentLayers : List DL.Layer -> Int -> List G.NodeId -> List DL.Layer
 insertKNodesIntoKSubsequentLayers rankLayers startRank dummyNodes =
     LE.indexedFoldl
         (\p e layers ->
-            LE.updateAt (startRank + p) (\layer -> List.append layer [ e ]) layers
+            LE.updateAt (startRank + p)
+                (\layer ->
+                    DL.append e layer
+                )
+                layers
         )
         rankLayers
         dummyNodes

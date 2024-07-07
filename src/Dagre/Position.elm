@@ -1,6 +1,7 @@
 module Dagre.Position exposing (position)
 
 import Dagre.Attributes as DA exposing (RankDir(..))
+import Dagre.Layer as DL
 import Dagre.Position.BK as BK exposing (NodePointDict)
 import Dagre.Utils as DU
 import Dict exposing (Dict)
@@ -8,7 +9,7 @@ import Graph as G
 import List.Extra as LE
 
 
-positionY : DA.Config -> List DU.Layer -> NodePointDict
+positionY : DA.Config -> List DL.Layer -> NodePointDict
 positionY config rankList =
     let
         ys =
@@ -26,19 +27,21 @@ positionY config rankList =
 -}
 
 
-assignAbsoluteY : DA.Config -> DU.Layer -> ( Float, NodePointDict ) -> ( Float, NodePointDict )
+assignAbsoluteY : DA.Config -> DL.Layer -> ( Float, NodePointDict ) -> ( Float, NodePointDict )
 assignAbsoluteY config l ( currentY, ys ) =
     let
         getHeight =
             height config
 
         maxHeight =
-            List.map getHeight l
-                |> List.maximum
+            l
+                |> DL.toList
+                |> LE.maximumBy getHeight
+                |> Maybe.map getHeight
                 |> Maybe.withDefault config.height
 
         ys_updated =
-            List.foldl (\n ys_ -> Dict.insert n (currentY + maxHeight / 2) ys_) ys l
+            List.foldl (\n ys_ -> Dict.insert n (currentY + maxHeight / 2) ys_) ys (DL.toList l)
 
         newY =
             currentY + maxHeight + config.rankSep
@@ -74,7 +77,7 @@ combinePoints xs ys =
     Dict.merge onlyX bothXY onlyY xs ys Dict.empty
 
 
-position : DA.Config -> G.Graph n e -> ( List DU.Layer, List DU.Edge ) -> ( Dict G.NodeId DU.Coordinates, ( Float, Float ) )
+position : DA.Config -> G.Graph n e -> ( List DL.Layer, List DU.Edge ) -> ( Dict G.NodeId DU.Coordinates, ( Float, Float ) )
 position config g ( rankList, edges ) =
     let
         adjustedConfig =
